@@ -4,3 +4,8 @@ design/atriz*.jpeg
 informacao/
 .vercel/
 node_modules/
+
+# segredos (NUNCA versionar)
+.env
+.env.*
+!.env.example

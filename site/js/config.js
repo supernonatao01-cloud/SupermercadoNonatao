@@ -3,5 +3,5 @@
 // Enquanto estiver vazio, o site roda em MODO DEMONSTRAÇÃO (dados só no navegador).
 window.NONATAO_CONFIG = {
   supabaseUrl: '',   // ex.: https://abcdxyz.supabase.co
-  supabaseKey: '',   // chave "anon public" (Project Settings > API)
+  supabaseKey: 'sb_publishable_UhRCn-4FE0Jg-cU9rpUGqA_VafO9PmK',   // chave pública (publishable)
 };

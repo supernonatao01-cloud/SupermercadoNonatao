@@ -90,7 +90,8 @@ async function rest(path, { method = 'GET', body, auth = false } = {}) {
   const tk = auth ? await token() : cfg.supabaseKey;
   const res = await fetch(`${cfg.supabaseUrl}/rest/v1/${path}`, {
     method,
-    headers: { apikey: cfg.supabaseKey, Authorization: `Bearer ${tk}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+    // chaves novas (sb_publishable_...) não são JWT: só mandamos Authorization quando há sessão de admin
+    headers: { apikey: cfg.supabaseKey, ...(tk !== cfg.supabaseKey ? { Authorization: `Bearer ${tk}` } : {}), 'Content-Type': 'application/json', Prefer: 'return=representation' },
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) throw new Error((await res.text()) || `Erro ${res.status}`);
