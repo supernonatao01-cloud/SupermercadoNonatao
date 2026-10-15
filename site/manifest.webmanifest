@@ -29,8 +29,8 @@
   ],
   "shortcuts": [
     {
-      "name": "Panfleto online",
-      "url": "panfleto",
+      "name": "Ofertas",
+      "url": "ofertas",
       "icons": [
         {
           "src": "assets/icon-192.png",

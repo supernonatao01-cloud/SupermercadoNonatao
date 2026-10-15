@@ -1,6 +1,6 @@
 # Nonatão Digital
 
-Site do Nonatão Supermercados (Uiraúna-PB): landing page, **panfleto online** (ofertas por dia da semana),
+Site do Nonatão Supermercados (Uiraúna-PB): landing page, **ofertas online** (imagens com período de validade),
 **sorteios** e **painel admin**.
 
 - Site estático (HTML/CSS/JS, sem build) na pasta `site/`, publicado na Vercel.
@@ -9,7 +9,7 @@ Site do Nonatão Supermercados (Uiraúna-PB): landing page, **panfleto online** 
 ## Rodar no computador
 
 ```bash
-python serve.py        # http://localhost:5174  (aceita URLs limpas como /panfleto)
+python serve.py        # http://localhost:5174  (aceita URLs limpas como /ofertas)
 ```
 
 Enquanto `site/js/config.js` estiver vazio, o site roda em **modo demonstração** (apenas no `localhost`):
@@ -36,17 +36,17 @@ Na internet (sem Supabase configurado) as páginas aparecem vazias — nunca com
    **Nunca** use a chave `service_role` aqui.
 6. Faça commit e push: a Vercel publica sozinha. Acesse `/admin` e entre com o e-mail e a senha.
 
-## Panfletos (migrações 3 e 4)
+## Ofertas (migrações 3 e 4)
 
-Um **panfleto** é uma promoção (ex.: *Quinta da Carne*) com **período em que fica no ar** e **imagens** (páginas) que o cliente folheia.
-O cliente só vê o que está no ar no dia; depois da data final o panfleto some sozinho.
+Uma **oferta** é uma promoção (ex.: *Quinta da Carne*) com **período em que fica no ar** e **imagens** (páginas) que o cliente folheia.
+O cliente só vê o que está no ar no dia; depois da data final a oferta some sozinha.
 
 1. Rode `supabase/migracao_panfletos.sql` e depois `supabase/migracao_panfletos_imagens.sql` no SQL Editor.
-2. Para ver os panfletos de exemplo (imagens de `imgspanfletos/`): `python tools/dados_panfletos.py` (`--apagar` remove os exemplos).
+2. Para ver as ofertas de exemplo (imagens de `imgspanfletos/`): `python tools/dados_panfletos.py` (`--apagar` remove os exemplos).
 
 ## Como a equipe usa o painel (`/admin`)
 
-- **Panfletos**: **+ Novo panfleto** → nome da promoção, *a partir do dia* / *até o dia* (ou “Só hoje”), adicione as imagens
+- **Ofertas**: **+ Nova oferta** → nome da promoção, *a partir do dia* / *até o dia* (ou “Só hoje”), adicione as imagens
   (várias de uma vez; ← → muda a ordem; a primeira é a capa) → Salvar. O interruptor verde mostra ou esconde sem apagar.
 - **Sorteios**: **+ Novo sorteio** → arte, prêmio, data/hora (contagem regressiva automática), como participar, regulamento.
   Depois do sorteio, preencha o **ganhador** (nome, foto, vídeo): ele passa sozinho para *Já sorteados*.
@@ -55,7 +55,7 @@ O cliente só vê o que está no ar no dia; depois da data final o panfleto some
 ## Estrutura
 
 ```
-site/            site publicado (index, panfleto, sorteios, admin)
+site/            site publicado (index, ofertas, sorteios, admin)
   js/api.js      camada de dados (Supabase via REST; modo demo no localhost)
 supabase/        schema.sql e migrações (tabelas, regras de segurança, bucket de fotos)
 tools/           scripts de apoio (admin, exemplos, verificação)

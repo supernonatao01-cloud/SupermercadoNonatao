@@ -128,6 +128,23 @@ code{font:600 .86em ui-monospace,SFMono-Regular,Menlo,monospace;background:var(-
 .timeline p{color:var(--muted);margin-top:4px;max-width:44rem}
 footer{margin-top:44px;padding-top:20px;border-top:1.5px solid var(--ink);color:var(--muted);font-size:.9rem}
 @media (max-width:520px){.hero{padding-block:30px 20px}.facts div{padding-right:10px}}
+@page{size:A4;margin:12mm}
+@media print{
+  body{padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:14px}
+  .toc{display:none}.layout{display:block}
+  .hero{padding-block:0 12px}
+  section{padding-top:22px;break-inside:auto}
+  h2,h3,.sub,.eyebrow{break-after:avoid}
+  .box,.flow li,.tela,tr,.note,.timeline>div,.chave,footer{break-inside:avoid}
+  .tw{break-inside:auto;margin-top:12px}
+  th{break-after:avoid}
+  .telas{margin-top:6px;gap:14px}
+  .tela{zoom:.76}
+  .telas{flex-wrap:wrap;overflow:visible;gap:20px;padding:14px 0}
+  .phone{box-shadow:none}
+  .cols{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .flow{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
 @media (prefers-reduced-motion:no-preference){.laser{animation:scan 2.4s ease-in-out infinite alternate}@keyframes scan{from{top:18%}to{top:80%}}}
 </style>
 

@@ -12,7 +12,7 @@ export function montarShell(ativa) {
           <img src="assets/logo-branco.png" alt="" width="40" height="37"><span class="brand__txt">nonatão</span>
         </a>
         <nav class="nav" aria-label="Principal">
-          <a href="panfleto"${cur('panfleto')}>Panfleto online</a>
+          <a href="ofertas"${cur('ofertas')}>Ofertas</a>
           <a href="sorteios"${cur('sorteios')}>Sorteios</a>
           <a href="./#lojas">Nossas lojas</a>
         </nav>
@@ -32,7 +32,7 @@ export function montarShell(ativa) {
 
     <nav class="tabbar glass tabbar--5" aria-label="Navegação rápida">
       <a href="./">${ic('i-home')}<span>Início</span></a>
-      <a href="panfleto"${ativa === 'panfleto' ? ' aria-current="true"' : ''}>${ic('i-tag')}<span>Panfleto</span></a>
+      <a href="ofertas"${ativa === 'ofertas' ? ' aria-current="true"' : ''}>${ic('i-tag')}<span>Ofertas</span></a>
       <a href="sorteios"${ativa === 'sorteios' ? ' aria-current="true"' : ''}>${ic('i-gift')}<span>Sorteios</span></a>
       <a href="./#lojas">${ic('i-pin')}<span>Lojas</span></a>
       <button type="button" data-open-whats>${ic('i-whats')}<span>WhatsApp</span></button>
@@ -47,7 +47,7 @@ export function montarShell(ativa) {
       <a class="sheet__opt" target="_blank" rel="noopener" href="https://wa.me/5583999424770?text=Ol%C3%A1!%20Vim%20pelo%20site%20do%20Nonat%C3%A3o%20(Loja%201).">
         <b>Loja 1</b><span>R. João Pinto, 56</span>${ic('i-whats')}</a>
       <a class="sheet__opt" target="_blank" rel="noopener" href="https://wa.me/5583996563130?text=Ol%C3%A1!%20Vim%20pelo%20site%20do%20Nonat%C3%A3o%20(Loja%202).">
-        <b>Loja 2</b><span>Rua José Barbosa, 76, Centro</span>${ic('i-whats')}</a>
+        <b>Loja 2</b><span>Rua José Barbosa, nº 76, Bairro São José</span>${ic('i-whats')}</a>
       <a class="sheet__opt sheet__opt--club" target="_blank" rel="noopener" href="${CLUBE}">
         <b>Clube de ofertas</b><span>Grupo com as promoções da semana</span>${ic('i-tag')}</a>
     </dialog>`);

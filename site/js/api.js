@@ -1,5 +1,5 @@
 /* Camada de dados do Nonatão: Supabase (REST) ou modo demonstração (localStorage).
-   Sem dependências. Usada pelas páginas /panfleto, /sorteios, home e /admin. */
+   Sem dependências. Usada pelas páginas /ofertas, /sorteios, home e /admin. */
 
 const cfg = window.NONATAO_CONFIG || {};
 const SEM_CONFIG = !cfg.supabaseUrl || !cfg.supabaseKey;
@@ -309,6 +309,15 @@ export function reduzirImagem(file, max = 1000, qualidade = 0.82) {
   });
 }
 const blobParaDataUrl = (b) => new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(b); });
+
+/** Apaga uma imagem do Storage a partir da URL pública (ignora URLs de outros lugares). Falha em silêncio. */
+export async function apagarImagem(url) {
+  if (DEMO || SEM_BANCO || !url) return;
+  const marca = `${cfg.supabaseUrl}/storage/v1/object/public/imagens/`;
+  if (!url.startsWith(marca)) return;
+  const caminho = url.slice(marca.length).split('?')[0];
+  try { await fetch(`${cfg.supabaseUrl}/storage/v1/object/imagens/${caminho}`, { method: 'DELETE', headers: { apikey: cfg.supabaseKey, Authorization: `Bearer ${await token()}` } }); } catch { /* sem problema: sobra um arquivo */ }
+}
 
 /** Envia um Blob já pronto (ex.: foto sem fundo) e devolve a URL pública. */
 export async function enviarBlob(blob, pasta = 'produtos') {

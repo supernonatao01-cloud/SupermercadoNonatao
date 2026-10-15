@@ -1,4 +1,4 @@
-/* Prévia do panfleto e dos sorteios na home. Se não houver dados, a seção mostra só os atalhos. */
+/* Prévia das ofertas e dos sorteios na home. Se não houver dados, a seção mostra só os atalhos. */
 import { DEMO, agora, esc, listarPanfletos, panfletoVigente, listarSorteios, statusSorteio } from './api.js';
 
 const mini = document.getElementById('mini');
@@ -15,7 +15,7 @@ listarPanfletos().then((pfs) => {
   mini.className = 'pf-cards';
   mini.innerHTML = lista.map((p, i) => {
     const txt = p.valido_ate === hoje ? 'Termina hoje' : p.valido_ate ? `Válido até ${dm(p.valido_ate)}` : 'No ar agora';
-    return `<a class="pf-card" href="panfleto?p=${encodeURIComponent(p.id)}" style="--i:${i}"><img src="${esc(p.imagens[0])}" alt="Capa do panfleto ${esc(p.titulo)}" loading="lazy" width="360" height="450">
+    return `<a class="pf-card" href="ofertas?p=${encodeURIComponent(p.id)}" style="--i:${i}"><img src="${esc(p.imagens[0])}" alt="Capa da oferta ${esc(p.titulo)}" loading="lazy" width="360" height="450">
       <div><b>${esc(p.titulo)}</b><span>${esc(txt)}</span></div></a>`;
   }).join('');
   mini.hidden = false;

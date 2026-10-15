@@ -59,7 +59,7 @@ PANFLETOS = [
     dict(id=pid(2), titulo="Quarta e Quinta Verde", subtitulo=None, valido_de=d(-1), valido_ate=d(1), imagens=[U["verde"]], ordem=1, ativo=True),
     dict(id=pid(3), titulo="Quinta da Carne", subtitulo="É dia de churrasco! Confira nossas ofertas especiais de carnes!", valido_de=d(0), valido_ate=d(0), imagens=[U["carne"]], ordem=2, ativo=True),
     dict(id=pid(4), titulo="Super Sexta do Pescado", subtitulo=None, valido_de=d(0), valido_ate=d(3), imagens=[U["pescado"]], ordem=3, ativo=True),
-    dict(id=pid(5), titulo="Teste: vários panfletos", subtitulo="Exemplo de panfleto com várias páginas para folhear.", valido_de=d(-1), valido_ate=d(2),
+    dict(id=pid(5), titulo="Teste: várias ofertas", subtitulo="Exemplo de panfleto com várias páginas para folhear.", valido_de=d(-1), valido_ate=d(2),
          imagens=[U["rosa"], U["carne"], U["verde"], U["pescado"]], ordem=9, ativo=True),
 ]
 

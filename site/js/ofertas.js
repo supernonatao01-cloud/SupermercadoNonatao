@@ -1,7 +1,7 @@
 import { DEMO, agora, esc, listarPanfletos, panfletoVigente } from './api.js';
 import { montarShell } from './shell.js';
 
-montarShell('panfleto');
+montarShell('ofertas');
 if (DEMO) document.getElementById('demo').hidden = false;
 
 const $ = (s) => document.querySelector(s);
@@ -9,7 +9,7 @@ const hojeISO = agora().iso;
 const estado = { pfs: [], sel: new URLSearchParams(location.search).get('p'), pagina: 0 };
 const dm = (iso) => iso.split('-').reverse().slice(0, 2).join('/');   // 2026-10-17 -> 17/10
 
-/** Só entram os panfletos no ar hoje (datas) e que tenham pelo menos uma imagem. */
+/** Só entram as ofertas no ar hoje (datas) e que tenham pelo menos uma imagem. */
 const noAr = () => estado.pfs.filter((p) => panfletoVigente(p, hojeISO) && (p.imagens || []).length)
   .sort((a, b) => (a.ordem - b.ordem) || String(b.valido_de || '').localeCompare(String(a.valido_de || '')));
 const atual = () => { const l = noAr(); return l.find((p) => p.id === estado.sel) || l[0] || null; };
@@ -26,7 +26,7 @@ function validade(p) {
 const tabs = $('#tabs');
 function montarAbas() {
   const lista = noAr();
-  $('#barra-abas').hidden = lista.length < 2;   // com um só panfleto não precisa de abas
+  $('#barra-abas').hidden = lista.length < 2;   // com uma só oferta não precisa de abas
   tabs.innerHTML = lista.map((p) => {
     const v = validade(p);
     return `<button class="pftab" role="tab" data-pf="${esc(p.id)}" aria-selected="${p.id === (atual() || {}).id}">
@@ -47,8 +47,8 @@ function render() {
   const host = $('#viewer-host');
   const p = atual();
   if (!p) {
-    host.innerHTML = `<div class="vazio" style="margin:30px 0 70px"><div class="big">🛒</div><h3>Nenhum panfleto no ar agora</h3>
-      <p>Assim que um novo panfleto começar, ele aparece aqui. Entre no clube de ofertas para ser avisado no WhatsApp.</p>
+    host.innerHTML = `<div class="vazio" style="margin:30px 0 70px"><div class="big">🛒</div><h3>Nenhuma oferta no ar agora</h3>
+      <p>Assim que uma nova oferta começar, ela aparece aqui. Entre no clube de ofertas para ser avisado no WhatsApp.</p>
       <a class="btn btn--whats" target="_blank" rel="noopener" href="https://chat.whatsapp.com/Lcsv8LEJewk5SvZZ7n6JXw?s=cl&p=i&mlu=0&ilr=4">Entrar no clube de ofertas</a></div>`;
     return;
   }
@@ -58,7 +58,7 @@ function render() {
       <span class="badge-val${v.hoje ? ' badge-val--hoje' : ''}">${esc(v.txt)}</span></header>
     <div class="carrossel">
       <button class="navbtn navbtn--prev" type="button" data-nav="-1" aria-label="Página anterior">‹</button>
-      <div class="slides" id="slides" tabindex="0" aria-label="Páginas do panfleto ${esc(p.titulo)}">
+      <div class="slides" id="slides" tabindex="0" aria-label="Páginas da oferta ${esc(p.titulo)}">
         ${p.imagens.map((u, i) => `<button class="slide" type="button" data-i="${i}" aria-label="Ampliar página ${i + 1} de ${n}">
           <img src="${esc(u)}" alt="${esc(p.titulo)}, página ${i + 1} de ${n}" ${i ? 'loading="lazy"' : 'fetchpriority="high"'} decoding="async">
           <span class="slide__zoom" aria-hidden="true">🔍 Toque para ampliar</span></button>`).join('')}
@@ -141,7 +141,7 @@ async function baixarPagina(btn) {
   try {
     const blob = await (await fetch(url)).blob();
     const ext = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
-    const nome = `panfleto-${p.titulo.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-')}-${estado.pagina + 1}.${ext}`;
+    const nome = `oferta-${p.titulo.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-')}-${estado.pagina + 1}.${ext}`;
     const file = new File([blob], nome, { type: blob.type });
     if (navigator.canShare && navigator.canShare({ files: [file] }) && matchMedia('(pointer: coarse)').matches) {
       await navigator.share({ files: [file], text: `${p.titulo} · Nonatão Supermercados` }).catch(() => {});
@@ -160,7 +160,7 @@ $('#viewer-host').addEventListener('click', (e) => {
   if (ac.dataset.acao === 'baixar') baixarPagina(ac);
   if (ac.dataset.acao === 'zap') {
     const p = atual();
-    open(`https://wa.me/?text=${encodeURIComponent(`🛒 ${p.titulo} no Nonatão Supermercados!\nConfira o panfleto: ${location.origin}/panfleto?p=${encodeURIComponent(p.id)}`)}`, '_blank', 'noopener');
+    open(`https://wa.me/?text=${encodeURIComponent(`🛒 ${p.titulo} no Nonatão Supermercados!\nConfira a oferta: ${location.origin}/ofertas?p=${encodeURIComponent(p.id)}`)}`, '_blank', 'noopener');
   }
 });
 document.addEventListener('keydown', (e) => {
@@ -171,4 +171,4 @@ document.addEventListener('keydown', (e) => {
 /* ---------- carregar ---------- */
 $('#viewer-host').innerHTML = '<div class="skel" style="width:min(100%,620px);height:560px;margin:24px auto"></div>';
 listarPanfletos().then((l) => { estado.pfs = l; if (!atual()) estado.sel = null; montarAbas(); render(); })
-  .catch(() => { $('#viewer-host').innerHTML = '<div class="vazio" style="margin:30px 0 70px"><div class="big">📡</div><h3>Não foi possível carregar os panfletos</h3><p>Verifique sua internet e tente de novo.</p><button class="btn btn--blue" onclick="location.reload()">Tentar novamente</button></div>'; });
+  .catch(() => { $('#viewer-host').innerHTML = '<div class="vazio" style="margin:30px 0 70px"><div class="big">📡</div><h3>Não foi possível carregar as ofertas</h3><p>Verifique sua internet e tente de novo.</p><button class="btn btn--blue" onclick="location.reload()">Tentar novamente</button></div>'; });

@@ -2,7 +2,7 @@ import {
   DEMO, SEM_BANCO, DIAS, esc, agora,
   login, logout, sessaoAtual, ehAdmin, demoRestaurar,
   listarSorteios, salvarSorteio, removerSorteio, enviarImagem, statusSorteio,
-  listarPanfletos, salvarPanfleto, removerPanfleto, panfletoVigente, reduzirImagem, enviarBlob,
+  listarPanfletos, salvarPanfleto, removerPanfleto, panfletoVigente, reduzirImagem, enviarBlob, apagarImagem,
 } from './api.js';
 
 const app = document.getElementById('app');
@@ -46,18 +46,18 @@ async function iniciar() {
   app.innerHTML = `
     <header class="ad-top"><div class="ad-top__in">
       <img src="assets/logo-branco.png" alt=""><b>Painel</b><span class="sp"></span>
-      <a href="panfleto" target="_blank" rel="noopener">Ver site</a>
+      <a href="ofertas" target="_blank" rel="noopener">Ver site</a>
       <button class="lnk" id="sair">Sair</button>
     </div></header>
     ${DEMO ? '<div class="demo-banner">Modo demonstração: dados só neste navegador. <button class="lnk" id="reset" style="background:rgba(0,0,0,.12);color:#1b2a66;border:0;border-radius:999px;padding:4px 12px;font-weight:700;cursor:pointer">Restaurar exemplos</button></div>' : ''}
     <div class="ad-wrap">
       <div class="ad-tabs" role="tablist">
-        <button class="chip-btn" role="tab" data-aba="panfletos">📰 Panfletos</button>
+        <button class="chip-btn" role="tab" data-aba="panfletos">📰 Ofertas</button>
         <button class="chip-btn" role="tab" data-aba="sorteios">🎁 Sorteios</button>
       </div>
       <div id="corpo"></div>
     </div>
-    <button class="fab-add" id="novo"><span>+</span><b id="novo-t">Novo panfleto</b></button>
+    <button class="fab-add" id="novo"><span>+</span><b id="novo-t">Nova oferta</b></button>
     <dialog class="ed" id="ed"></dialog>`;
   $('#sair').onclick = () => { logout(); telaLogin(); };
   if (DEMO) $('#reset').onclick = async () => { demoRestaurar(); await carregar(); toast('Exemplos restaurados'); };
@@ -76,7 +76,7 @@ async function carregar() {
 }
 function desenhar() {
   app.querySelectorAll('[data-aba]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.aba === S.aba)));
-  $('#novo-t').textContent = S.aba === 'sorteios' ? 'Novo sorteio' : 'Novo panfleto';
+  $('#novo-t').textContent = S.aba === 'sorteios' ? 'Novo sorteio' : 'Nova oferta';
   if (S.aba === 'sorteios') desenharSorteios(); else desenharPanfletos();
 }
 
@@ -176,7 +176,7 @@ function editorSorteio(s = null) {
 /* ============ PANFLETOS ============ */
 const dm = (iso) => iso.split('-').reverse().slice(0, 2).join('/');
 const dmy = (iso) => iso.split('-').reverse().join('/');
-/** Situação do panfleto hoje. */
+/** Situação da oferta hoje. */
 function situacao(pf) {
   const hoje = agora().iso;
   if (pf.ativo === false) return { k: 'oculto', txt: 'Oculto', cls: 'tag--r', ordem: 3 };
@@ -189,7 +189,7 @@ const periodo = (pf) => (pf.valido_de && pf.valido_ate ? (pf.valido_de === pf.va
 
 function desenharPanfletos() {
   const lista = [...S.panfletos].sort((a, b) => situacao(a).ordem - situacao(b).ordem || String(b.valido_de || '').localeCompare(String(a.valido_de || '')));
-  $('#corpo').innerHTML = `<p class="hint" style="margin-bottom:14px">Crie a <b>promoção</b> (ex.: “Quinta da Carne”), escolha o <b>período em que fica no ar</b> e suba as <b>imagens do panfleto</b>. O cliente só vê o que está no ar no dia.</p>
+  $('#corpo').innerHTML = `<p class="hint" style="margin-bottom:14px">Crie a <b>oferta</b> (ex.: “Quinta da Carne”), escolha o <b>período em que fica no ar</b> e suba as <b>imagens</b>. O cliente só vê o que está no ar no dia.</p>
     <div class="ad-list">${lista.length ? lista.map((pf) => {
       const st = situacao(pf), n = (pf.imagens || []).length;
       return `<div class="row ${pf.ativo === false ? 'off' : ''}" data-id="${esc(pf.id)}"><div class="row__img">${n ? `<img src="${esc(pf.imagens[0])}" alt="" style="object-position:top">` : '📰'}</div>
@@ -197,7 +197,7 @@ function desenharPanfletos() {
           <div class="tags"><span class="tag ${st.cls}">${esc(st.txt)}</span><span class="tag">${n} página${n === 1 ? '' : 's'}</span></div></div>
         <div class="row__a"><label class="sw" title="Mostrar no site"><input type="checkbox" data-ativo ${pf.ativo !== false ? 'checked' : ''} aria-label="Mostrar ${esc(pf.titulo)} no site"><i></i></label>
           <button class="ibtn" data-edit aria-label="Editar ${esc(pf.titulo)}">✎</button></div></div>`;
-    }).join('') : '<div class="vazio"><div class="big">📰</div><h3>Nenhum panfleto ainda</h3><p>Toque em “Novo panfleto” para criar o primeiro.</p></div>'}</div><div style="height:90px"></div>`;
+    }).join('') : '<div class="vazio"><div class="big">📰</div><h3>Nenhuma oferta ainda</h3><p>Toque em “Nova oferta” para criar a primeira.</p></div>'}</div><div style="height:90px"></div>`;
   $('#corpo').querySelectorAll('.row').forEach((r) => {
     const pf = S.panfletos.find((x) => x.id === r.dataset.id);
     r.querySelector('[data-edit]').onclick = () => editorPanfleto(pf);
@@ -208,15 +208,21 @@ function desenharPanfletos() {
   });
 }
 
+/** Apaga do Storage as imagens que deixaram de ser usadas (exceto as que outra oferta ainda usa). */
+async function limparImagens(urls, exceto) {
+  const emUso = new Set(S.panfletos.filter((p) => p.id !== exceto).flatMap((p) => p.imagens || []));
+  await Promise.all(urls.filter((u) => !emUso.has(u)).map(apagarImagem));
+}
+
 function editorPanfleto(pf = null) {
   const novo = !pf;
   const hoje = agora().iso;
   const v = pf ? { ...pf, imagens: [...(pf.imagens || [])] } : { titulo: '', subtitulo: '', valido_de: hoje, valido_ate: hoje, imagens: [], ordem: S.panfletos.length, ativo: true };
   const dlg = $('#ed');
   dlg.innerHTML = `
-    <div class="ed__h"><h2>${novo ? 'Novo panfleto' : 'Editar panfleto'}</h2><button class="ibtn" type="button" data-fechar aria-label="Fechar">×</button></div>
+    <div class="ed__h"><h2>${novo ? 'Nova oferta' : 'Editar oferta'}</h2><button class="ibtn" type="button" data-fechar aria-label="Fechar">×</button></div>
     <form class="ed__b" id="f-pf" novalidate>
-      <label class="field"><span>Nome da promoção</span><input name="titulo" value="${esc(v.titulo)}" maxlength="50" placeholder="Ex.: Quinta da Carne" required></label>
+      <label class="field"><span>Nome da oferta</span><input name="titulo" value="${esc(v.titulo)}" maxlength="50" placeholder="Ex.: Quinta da Carne" required></label>
       <label class="field"><span>Descrição curta <small>(opcional)</small></span><input name="subtitulo" value="${esc(v.subtitulo || '')}" maxlength="110" placeholder="Ex.: É dia de churrasco!"></label>
       <div><span class="lbl">Fica no ar</span>
         <div class="two" style="margin-top:6px">
@@ -224,16 +230,16 @@ function editorPanfleto(pf = null) {
           <label class="field"><span>Até o dia</span><input name="valido_ate" type="date" value="${esc(v.valido_ate || '')}"></label>
         </div>
         <div class="chips" style="margin-top:8px"><button type="button" class="chip-btn" id="so-hoje">Só hoje</button><button type="button" class="chip-btn" id="sem-fim">Sem data de fim</button></div>
-        <small style="color:var(--muted);display:block;margin-top:6px">Para um dia só, use a mesma data nos dois campos. Depois da data final o panfleto some sozinho do site.</small></div>
-      <div><span class="lbl">Páginas do panfleto</span>
+        <small style="color:var(--muted);display:block;margin-top:6px">Para um dia só, use a mesma data nos dois campos. Depois da data final a oferta some sozinha do site.</small></div>
+      <div><span class="lbl">Páginas da oferta</span>
         <div class="paginas" id="paginas" style="margin-top:8px"></div>
-        <label class="btn btn--blue" style="margin-top:10px;width:100%"><input type="file" accept="image/*" multiple id="arq-pf" style="display:none">${ic('i-search')} Adicionar imagens do panfleto</label>
+        <label class="btn btn--blue" style="margin-top:10px;width:100%"><input type="file" accept="image/*" multiple id="arq-pf" style="display:none">${ic('i-search')} Adicionar imagens da oferta</label>
         <small style="color:var(--muted);display:block;margin-top:6px">Pode escolher várias de uma vez. Use ← → para mudar a ordem. A primeira é a capa.</small></div>
       <label class="field"><span>Ordem nas abas</span><input name="ordem" type="number" inputmode="numeric" value="${Number(v.ordem) || 0}"><small>Menor número aparece primeiro.</small></label>
       <label class="toggle-row"><span>Mostrar no site<small>Desligue para esconder sem apagar</small></span><span class="sw"><input type="checkbox" name="ativo" ${v.ativo !== false ? 'checked' : ''}><i></i></span></label>
       <div class="erro" id="e-pf" hidden></div>
     </form>
-    <div class="ed__f">${novo ? '' : '<button class="btn btn--outline" type="button" id="del" style="flex:0 0 auto;color:#b30f24">Apagar</button>'}<button class="btn btn--whats" type="button" id="salvar">Salvar panfleto</button></div>`;
+    <div class="ed__f">${novo ? '' : '<button class="btn btn--outline" type="button" id="del" style="flex:0 0 auto;color:#b30f24">Apagar</button>'}<button class="btn btn--whats" type="button" id="salvar">Salvar oferta</button></div>`;
   dlg.showModal();
   const f = $('#f-pf', dlg), erro = $('#e-pf', dlg), area = $('#paginas', dlg);
   let enviando = 0;
@@ -272,17 +278,20 @@ function editorPanfleto(pf = null) {
     const falha = (m) => { erro.textContent = m; erro.hidden = false; };
     if (!d.titulo.trim()) return falha('Digite o nome da promoção.');
     if (enviando) return falha('Aguarde terminar de enviar as imagens.');
-    if (!v.imagens.length) return falha('Adicione pelo menos uma imagem do panfleto.');
+    if (!v.imagens.length) return falha('Adicione pelo menos uma imagem da oferta.');
     if (d.valido_de && d.valido_ate && d.valido_ate < d.valido_de) return falha('A data final não pode ser antes da inicial.');
     e.currentTarget.disabled = true; erro.hidden = true;
     const dados = { ...(pf ? { id: pf.id } : {}), titulo: d.titulo.trim(), subtitulo: d.subtitulo.trim() || null, valido_de: d.valido_de || null, valido_ate: d.valido_ate || null,
       imagens: v.imagens, ordem: Number(d.ordem) || 0, ativo: f.elements.ativo.checked };
-    if (await pedir(() => salvarPanfleto(dados), 'Panfleto salvo!')) { dlg.close(); carregar(); } else e.currentTarget.disabled = false;
+    if (await pedir(() => salvarPanfleto(dados), 'Oferta salva!')) {
+      if (pf) await limparImagens((pf.imagens || []).filter((u) => !v.imagens.includes(u)), pf.id);
+      dlg.close(); carregar();
+    } else e.currentTarget.disabled = false;
   };
   const del = $('#del', dlg);
   if (del) del.onclick = async () => {
-    if (!confirm(`Apagar o panfleto “${pf.titulo}”? Isso não pode ser desfeito.`)) return;
-    if (await pedir(() => removerPanfleto(pf.id), 'Panfleto apagado')) { dlg.close(); carregar(); }
+    if (!confirm(`Apagar a oferta “${pf.titulo}”? Isso não pode ser desfeito.`)) return;
+    if (await pedir(() => removerPanfleto(pf.id), 'Oferta apagada')) { await limparImagens(pf.imagens || [], pf.id); dlg.close(); carregar(); }
   };
 }
 
