@@ -393,9 +393,10 @@ function editorPanfleto(pf = null) {
         ${v.titulo_arte_url ? '<button type="button" class="btn btn--outline" id="rm-a" style="margin-top:8px;color:#b30f24">Tirar logo</button>' : ''}</div></div>
       <div><span class="lbl">Visual</span><div class="chips" id="estilos" style="margin-top:6px">${ESTILOS.map((e) => `<button type="button" class="chip-btn" data-est="${e.id}" aria-pressed="${v.estilo === e.id}">${e.nome}</button>`).join('')}</div></div>
       <div>
-        <span class="lbl">Em quais dias aparece?</span>
+        <span class="lbl">Dia(s) de destaque <small>(opcional)</small></span>
         <div class="chips" id="dias" style="margin-top:6px">${DIAS.map((d) => `<button type="button" class="chip-btn" data-dia="${d.n}" aria-pressed="${v.dias.includes(d.n)}">${d.s}</button>`).join('')}</div>
-        <label class="toggle-row" style="margin-top:10px"><span>Todos os dias<small>Campanha: aparece em todos os dias e na aba “Semana toda”</small></span><span class="sw"><input type="checkbox" name="semana_toda" ${v.semana_toda ? 'checked' : ''}><i></i></span></label>
+        <small style="color:var(--muted);display:block;margin-top:4px">O panfleto fica sempre disponível no site. Esses dias só mostram a etiqueta “hoje” e calculam a data de validade do rodapé (ex.: “somente dia 16/10/2026”).</small>
+        <label class="toggle-row" style="margin-top:10px"><span>Campanha (sem dia fixo)<small>Marque para campanhas com data de início e fim, como o Outubro Rosa</small></span><span class="sw"><input type="checkbox" name="semana_toda" ${v.semana_toda ? 'checked' : ''}><i></i></span></label>
       </div>
       <div class="two">
         <label class="field"><span>Começa em <small>(opcional)</small></span><input name="valido_de" type="date" value="${esc(v.valido_de || '')}"></label>
@@ -411,7 +412,7 @@ function editorPanfleto(pf = null) {
         <label class="field"><span>Cor 2 <small>(opcional)</small></span><input name="cor_b" type="color" value="${corB}" style="padding:4px"></label>
       </div>
       <label class="toggle-row"><span>Usar minhas cores<small>Desligado: usa as cores do visual escolhido</small></span><span class="sw"><input type="checkbox" name="usar_cores" ${v.cor_a || v.cor_b ? 'checked' : ''}><i></i></span></label>
-      <label class="field"><span>Ordem na página</span><input name="ordem" type="number" inputmode="numeric" value="${Number(v.ordem) || 0}"><small>Menor número aparece primeiro quando há mais de um panfleto no dia.</small></label>
+      <label class="field"><span>Ordem na página</span><input name="ordem" type="number" inputmode="numeric" value="${Number(v.ordem) || 0}"><small>Menor número aparece primeiro nas abas.</small></label>
       <label class="toggle-row"><span>Mostrar no site<small>Desligue para esconder sem apagar</small></span><span class="sw"><input type="checkbox" name="ativo" ${v.ativo ? 'checked' : ''}><i></i></span></label>
       <div class="erro" id="e-t" hidden></div>
     </form>
@@ -443,7 +444,6 @@ function editorPanfleto(pf = null) {
     const d = Object.fromEntries(new FormData(f));
     const todos = f.elements.semana_toda.checked;
     if (!d.titulo.trim()) { erro.textContent = 'Digite o título do panfleto.'; erro.hidden = false; return; }
-    if (!todos && !v.dias.length) { erro.textContent = 'Marque pelo menos um dia, ou “Todos os dias”.'; erro.hidden = false; return; }
     if (d.valido_de && d.valido_ate && d.valido_ate < d.valido_de) { erro.textContent = 'A data final não pode ser antes da inicial.'; erro.hidden = false; return; }
     const usar = f.elements.usar_cores.checked;
     e.currentTarget.disabled = true;

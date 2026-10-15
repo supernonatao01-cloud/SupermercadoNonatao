@@ -1,5 +1,5 @@
 import {
-  DEMO, DIAS, CATEGORIAS, TEMAS_PADRAO, RODAPE_PADRAO, RODAPE_SEMANA, agora, brl, desconto, esc, emojiDe, layoutDe, textoValidade,
+  DEMO, DIAS, CATEGORIAS, RODAPE_PADRAO, agora, brl, desconto, esc, emojiDe, layoutDe, textoValidade,
   listarProdutos, listarPanfletos, panfletoVigente,
 } from './api.js';
 import { montarShell } from './shell.js';
@@ -13,51 +13,60 @@ const FAV = 'nonatao_favoritos';
 const lerFav = () => { try { return new Set(JSON.parse(localStorage.getItem(FAV)) || []); } catch { return new Set(); } };
 const gravarFav = (s) => { try { localStorage.setItem(FAV, JSON.stringify([...s])); } catch { /* sem storage */ } };
 
-const pedido = new URLSearchParams(location.search).get('dia');
-const abaInicial = pedido === 'semana' ? 'semana' : (pedido !== null && /^[0-6]$/.test(pedido) ? pedido : String(hoje));
-const estado = { produtos: [], panfletos: [], aba: abaInicial, cat: 'Todas', q: '', fav: lerFav(), vista: 'panfleto' };
+const pedido = new URLSearchParams(location.search).get('p');
+const estado = { produtos: [], panfletos: [], sel: pedido, cat: 'Todas', q: '', fav: lerFav(), vista: 'panfleto' };
 
-const diaDaAba = () => (estado.aba === 'semana' ? 7 : Number(estado.aba));
-const nomeDia = () => (estado.aba === 'semana' ? 'Semana toda' : DIAS.find((d) => String(d.n) === estado.aba).l);
 const unidadeRotulo = (u) => (!u || u === 'un' ? 'und' : u);
-const panfletoDe = (p) => estado.panfletos.find((x) => x.id === p.panfleto_id);
+const NOME_DIA = Object.fromEntries(DIAS.map((d) => [d.n, d.l.replace('-feira', '')]));
 
-/** Este panfleto aparece na aba atual? */
-const pfNaAba = (pf) => panfletoVigente(pf) && (estado.aba === 'semana' ? pf.semana_toda : (pf.semana_toda || (pf.dias || []).includes(Number(estado.aba))));
-/** Produto avulso (sem panfleto) aparece na aba atual? */
-const avulsoNaAba = (p) => {
-  const dias = p.dias || [];
-  return estado.aba === 'semana' ? p.semana_toda : (p.semana_toda || dias.includes(Number(estado.aba)));
-};
-/** Todos os produtos da aba atual (para a visão em lista). */
-const doDia = () => estado.produtos.filter((p) => {
-  if (!p.panfleto_id) return avulsoNaAba(p);
-  const pf = panfletoDe(p);
-  return pf && pfNaAba(pf);
-});
-/** Encartes da aba atual: primeiro os panfletos (por ordem), depois um encarte com os produtos avulsos do dia. */
-function encartesDaAba() {
-  const d = diaDaAba();
-  const lista = estado.panfletos.filter(pfNaAba).map((pf) => ({ id: pf.id, tema: pf, produtos: estado.produtos.filter((p) => p.panfleto_id === pf.id) }));
-  const avulsos = estado.produtos.filter((p) => !p.panfleto_id && avulsoNaAba(p));
-  if (avulsos.length) lista.push({ id: 'avulso', tema: { ...TEMAS_PADRAO[d], dia: d }, produtos: avulsos });
+/** Panfletos que valem hoje (ativos e dentro da janela de datas). */
+const vigentes = () => estado.panfletos.filter((pf) => panfletoVigente(pf));
+const doDiaHoje = (pf) => pf.semana_toda || (pf.dias || []).includes(hoje);
+/** Produtos avulsos (sem panfleto) que valem hoje: viram uma aba "Ofertas de hoje". */
+const avulsosHoje = () => estado.produtos.filter((p) => !p.panfleto_id && (p.semana_toda || (p.dias || []).includes(hoje)));
+const TEMA_AVULSO = { id: 'avulso', titulo: 'Ofertas de hoje', subtitulo: null, estilo: 'azul', dias: [hoje], semana_toda: false };
+/** Abas: os panfletos de hoje primeiro (depois por ordem), depois os demais. */
+function itensAbas() {
+  const lista = [...vigentes()].sort((a, b) => Number(doDiaHoje(b)) - Number(doDiaHoje(a)) || (a.ordem - b.ordem));
+  if (avulsosHoje().length) lista.push(TEMA_AVULSO);
   return lista;
 }
-
-/* ---------- abas de dias ---------- */
-const tabs = $('#tabs');
-tabs.innerHTML = [
-  ...DIAS.map((d) => `<button class="chip-btn" role="tab" data-aba="${d.n}" aria-selected="false">${d.s}${d.n === hoje ? '<span class="hoje">hoje</span>' : ''}</button>`),
-  '<button class="chip-btn chip-btn--week" role="tab" data-aba="semana" aria-selected="false">Semana toda</button>',
-].join('');
-function marcarAba() {
-  tabs.querySelectorAll('.chip-btn').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.aba === estado.aba)));
-  const ativa = tabs.querySelector('[aria-selected="true"]');
-  if (ativa) ativa.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
-  try { history.replaceState(null, '', `?dia=${estado.aba}`); } catch { /* ok */ }
+const encarteAtual = () => {
+  const lista = itensAbas();
+  const tema = lista.find((t) => t.id === estado.sel) || lista[0];
+  if (!tema) return null;
+  return { id: tema.id, tema, produtos: tema.id === 'avulso' ? avulsosHoje() : estado.produtos.filter((p) => p.panfleto_id === tema.id) };
+};
+/** Todos os produtos dos panfletos em vigor (visão em lista). */
+const doDia = () => estado.produtos.filter((p) => (p.panfleto_id ? vigentes().some((pf) => pf.id === p.panfleto_id) : true));
+/** Etiqueta no canto do encarte: "Quinta-feira", "Quarta e quinta" ou "14 a 17/10". */
+function etiqueta(t) {
+  if (t.valido_de && t.valido_ate && t.valido_de !== t.valido_ate) {
+    const [, m1, d1] = t.valido_de.split('-'), [, m2, d2] = t.valido_ate.split('-');
+    return m1 === m2 ? `${d1} a ${d2}/${m2}` : `${d1}/${m1} a ${d2}/${m2}`;
+  }
+  const dias = [...(t.dias || [])].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7));
+  if (t.semana_toda || !dias.length) return 'Todos os dias';
+  if (dias.length === 1) return DIAS.find((d) => d.n === dias[0]).l;
+  return dias.map((d) => NOME_DIA[d]).join(' e ');
 }
-function trocarAba(aba) { estado.aba = aba; marcarAba(); render(); }
-tabs.addEventListener('click', (e) => { const b = e.target.closest('[data-aba]'); if (b) trocarAba(b.dataset.aba); });
+
+/* ---------- abas (uma por panfleto, com a logo) ---------- */
+const tabs = $('#tabs');
+function montarAbas() {
+  const lista = itensAbas();
+  if (!lista.find((t) => t.id === estado.sel)) estado.sel = lista[0] ? lista[0].id : null;
+  tabs.innerHTML = lista.map((t) => `<button class="pftab" role="tab" data-pf="${esc(t.id)}" aria-selected="${t.id === estado.sel}">
+      ${t.titulo_arte_url ? `<img src="${esc(t.titulo_arte_url)}" alt="" width="44" height="44" loading="lazy">` : '<span class="pftab__ico" aria-hidden="true">🏷️</span>'}
+      <span class="pftab__t">${esc(t.titulo)}</span>${doDiaHoje(t) ? '<span class="hoje">hoje</span>' : ''}</button>`).join('');
+  const ativa = tabs.querySelector('[aria-selected="true"]');
+  if (ativa) ativa.scrollIntoView({ inline: 'center', block: 'nearest' });
+}
+function escolher(id) {
+  estado.sel = id; montarAbas(); render();
+  try { history.replaceState(null, '', `?p=${encodeURIComponent(id)}`); } catch { /* ok */ }
+}
+tabs.addEventListener('click', (e) => { const b = e.target.closest('[data-pf]'); if (b) escolher(b.dataset.pf); });
 
 /* ---------- alternar panfleto / lista ---------- */
 document.querySelector('.viewswitch').addEventListener('click', (e) => {
@@ -66,6 +75,7 @@ document.querySelector('.viewswitch').addEventListener('click', (e) => {
   document.querySelectorAll('.viewswitch button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
   $('#vista-panfleto').hidden = estado.vista !== 'panfleto';
   $('#vista-lista').hidden = estado.vista !== 'lista';
+  document.querySelector('.daytabs').hidden = estado.vista === 'lista';
   render();
 });
 
@@ -92,7 +102,6 @@ function pcard(p, i, grande) {
 }
 function flyerHTML(enc) {
   const { tema, produtos } = enc;
-  const d = diaDaAba();
   const estilo = tema.estilo || 'azul';
   const layout = layoutDe(estilo);
   const estilos = [];
@@ -104,8 +113,7 @@ function flyerHTML(enc) {
   const titulo = tema.titulo_arte_url
     ? `<img class="flyer__arte" src="${esc(tema.titulo_arte_url)}" alt="${esc(tema.titulo)}" crossorigin="anonymous">`
     : `<h2>${palavras.length ? `<span class="t-pre">${esc(palavras.join(' '))}</span>` : ''}<span class="t-main" style="--n:${Math.max(5, principal.length)}">${esc(principal)}</span></h2>`;
-  const modelo = tema.rodape || (estado.aba === 'semana' && !tema.valido_ate ? RODAPE_SEMANA : RODAPE_PADRAO);
-  const rodape = modelo.replace('{data}', textoValidade(tema, estado.aba === 'semana' ? null : d));
+  const rodape = (tema.rodape || RODAPE_PADRAO).replace('{data}', textoValidade(tema));
 
   const ordem = [...produtos].sort((a, b) => Number(b.destaque) - Number(a.destaque));
   const cartoes = ordem.map((p, i) => pcard(p, i, i === 0 && p.destaque && layout !== 'compacto' && ordem.length >= 3)).join('');
@@ -115,7 +123,7 @@ function flyerHTML(enc) {
          <a class="btn btn--whats no-export" target="_blank" rel="noopener" href="https://chat.whatsapp.com/Lcsv8LEJewk5SvZZ7n6JXw?s=cl&p=i&mlu=0&ilr=4">Entrar no clube de ofertas</a></div>`;
 
   return `<article class="flyer st-${esc(estilo)} lay-${layout}${tema.fundo_url ? ' has-bg' : ''}" style="${estilos.join(';')}" aria-label="Panfleto: ${esc(tema.titulo)}">
-    <div class="flyer__top"><img class="flyer__logo" src="assets/logo-branco.png" alt="Nonatão Supermercados" width="56" height="52"><span class="flyer__tag">${esc(nomeDia())}</span></div>
+    <div class="flyer__top"><img class="flyer__logo" src="assets/logo-branco.png" alt="Nonatão Supermercados" width="56" height="52"><span class="flyer__tag">${esc(etiqueta(tema))}</span></div>
     <header class="flyer__head">${titulo}${tema.subtitulo ? `<p class="flyer__sub">${esc(tema.subtitulo)}</p>` : ''}</header>
     ${corpo}
     <footer class="flyer__foot">
@@ -213,7 +221,7 @@ $('#flyer-host').addEventListener('click', (e) => {
   if (b.dataset.act === 'baixar') baixar(wrap, b);
   if (b.dataset.act === 'zap') {
     const titulo = wrap.querySelector('.flyer').getAttribute('aria-label').replace('Panfleto: ', '');
-    const texto = `🛒 ${titulo} no Nonatão Supermercados!\nConfira o panfleto: ${location.origin}/panfleto?dia=${estado.aba}`;
+    const texto = `🛒 ${titulo} no Nonatão Supermercados!\nConfira o panfleto: ${location.origin}/panfleto?p=${encodeURIComponent(wrap.dataset.fid)}`;
     open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
   }
 });
@@ -254,8 +262,7 @@ function renderLista() {
     if (estado.cat === 'Favoritos' ? !estado.fav.has(p.id) : (estado.cat !== 'Todas' && p.categoria !== estado.cat)) return false;
     return !estado.q || (`${p.nome} ${p.descricao || ''} ${p.categoria}`).toLowerCase().includes(estado.q);
   });
-  const d = DIAS.find((x) => String(x.n) === estado.aba);
-  $('#titulo-dia').textContent = estado.aba === 'semana' ? 'Ofertas da semana toda' : (Number(estado.aba) === hoje ? `Ofertas de hoje · ${d.l}` : `Ofertas de ${d.l.toLowerCase()}`);
+  $('#titulo-dia').textContent = 'Todos os produtos em oferta';
   $('#contador').textContent = lista.length === 1 ? '1 oferta' : `${lista.length} ofertas`;
   if (!lista.length) {
     const filtrando = estado.q || estado.cat !== 'Todas';
@@ -274,17 +281,18 @@ $('#grid').addEventListener('click', (e) => {
 });
 
 /* ---------- render geral ---------- */
+function vazio() {
+  return `<div class="flyer-wrap"><article class="flyer st-azul lay-flutuante"><div class="flyer__top"><img class="flyer__logo" src="assets/logo-branco.png" alt="Nonatão Supermercados" width="56" height="52"></div>
+    <div class="flyer__vazio"><div class="big">🛒</div><h3>Os panfletos estão chegando</h3><p>Volte mais tarde ou entre no clube de ofertas para receber as novidades no WhatsApp.</p>
+    <a class="btn btn--whats" target="_blank" rel="noopener" href="https://chat.whatsapp.com/Lcsv8LEJewk5SvZZ7n6JXw?s=cl&p=i&mlu=0&ilr=4">Entrar no clube de ofertas</a></div></article></div>`;
+}
 function render() {
   if (estado.vista === 'lista') { renderLista(); return; }
-  const encartes = encartesDaAba();
-  $('#flyer-host').innerHTML = encartes.length
-    ? encartes.map(encarteComAcoes).join('')
-    : `<div class="flyer-wrap"><article class="flyer st-azul lay-flutuante"><div class="flyer__top"><img class="flyer__logo" src="assets/logo-branco.png" alt="Nonatão Supermercados" width="56" height="52"><span class="flyer__tag">${esc(nomeDia())}</span></div>
-        <div class="flyer__vazio"><div class="big">🛒</div><h3>As ofertas deste dia estão chegando</h3><p>Volte mais tarde ou entre no clube de ofertas para receber as novidades no WhatsApp.</p>
-        <a class="btn btn--whats" target="_blank" rel="noopener" href="https://chat.whatsapp.com/Lcsv8LEJewk5SvZZ7n6JXw?s=cl&p=i&mlu=0&ilr=4">Entrar no clube de ofertas</a></div></article></div>`;
+  const enc = encarteAtual();
+  $('#flyer-host').innerHTML = enc ? encarteComAcoes(enc) : vazio();
 }
 
-/* deslizar para trocar de dia (celular) */
+/* deslizar para trocar de panfleto (celular) */
 let x0 = null, y0 = 0;
 const alvoSwipe = $('#flyer-host');
 alvoSwipe.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
@@ -292,16 +300,15 @@ alvoSwipe.addEventListener('touchend', (e) => {
   if (x0 == null) return;
   const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
   if (Math.abs(dx) < 90 || Math.abs(dx) < Math.abs(dy) * 1.8) return;
-  const ordem = [...DIAS.map((d) => String(d.n)), 'semana'];
-  const i = ordem.indexOf(estado.aba) + (dx < 0 ? 1 : -1);
-  if (i >= 0 && i < ordem.length) trocarAba(ordem[i]);
+  const ordem = itensAbas().map((t) => t.id);
+  const i = ordem.indexOf(estado.sel) + (dx < 0 ? 1 : -1);
+  if (i >= 0 && i < ordem.length) escolher(ordem[i]);
 }, { passive: true });
 
 /* ---------- carregar ---------- */
 $('#flyer-host').innerHTML = '<div class="skel" style="width:min(100%,820px);height:520px"></div>';
-marcarAba();
 Promise.all([listarProdutos(), listarPanfletos()]).then(([lista, pfs]) => {
-  estado.produtos = lista; estado.panfletos = pfs; montarCats(); render();
+  estado.produtos = lista; estado.panfletos = pfs; montarAbas(); montarCats(); render();
 }).catch(() => {
   $('#flyer-host').innerHTML = '<div class="vazio" style="width:100%"><div class="big">📡</div><h3>Não foi possível carregar o panfleto</h3><p>Verifique sua internet e tente de novo.</p><button class="btn btn--blue" onclick="location.reload()">Tentar novamente</button></div>';
 });

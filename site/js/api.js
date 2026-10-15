@@ -85,13 +85,26 @@ export const RODAPE_SEMANA = 'Ofertas válidas durante a semana. Sujeitas à dis
 
 const fmtBR = (iso) => iso.split('-').reverse().join('/');
 /** Texto de validade para o rodapé: "somente dia 16/10/2026" ou "de 14 a 17/10/2026". */
-export function textoValidade(p, diaSemana) {
+export function textoValidade(p) {
   if (p.valido_de && p.valido_ate && p.valido_de !== p.valido_ate) {
     const [a1, m1, d1] = p.valido_de.split('-'); const [a2, m2, d2] = p.valido_ate.split('-');
     return (m1 === m2 && a1 === a2) ? `de ${d1} a ${d2}/${m2}/${a2}` : `de ${d1}/${m1} a ${d2}/${m2}/${a2}`;
   }
   if (p.valido_ate) return `somente dia ${fmtBR(p.valido_ate)}`;
-  return diaSemana == null ? 'durante a semana' : `somente dia ${proximaData(diaSemana)}`;
+  const dias = p.dias || [];
+  if (!dias.length) return 'durante a semana';
+  // datas dos dias do panfleto na semana atual (seg a dom); se já passaram, vale a semana que vem
+  const { dia, iso } = agora(); const [ano, mes, dd] = iso.split('-').map(Number);
+  const hojeUTC = Date.UTC(ano, mes - 1, dd);
+  const segunda = hojeUTC - ((dia + 6) % 7) * 864e5;
+  let datas = dias.map((d) => segunda + ((d + 6) % 7) * 864e5).sort((x, y) => x - y);
+  if (datas[datas.length - 1] < hojeUTC) datas = datas.map((x) => x + 7 * 864e5);
+  const f = (t) => { const x = new Date(t); return [String(x.getUTCDate()).padStart(2, '0'), String(x.getUTCMonth() + 1).padStart(2, '0'), x.getUTCFullYear()]; };
+  if (datas.length === 1) { const [d1, m1, a1] = f(datas[0]); return `somente dia ${d1}/${m1}/${a1}`; }
+  const consecutivas = datas.every((t, k) => k === 0 || t - datas[k - 1] === 864e5);
+  const [d1, m1] = f(datas[0]); const [d2, m2, a2] = f(datas[datas.length - 1]);
+  if (consecutivas) return m1 === m2 ? `de ${d1} a ${d2}/${m2}/${a2}` : `de ${d1}/${m1} a ${d2}/${m2}/${a2}`;
+  return `nos dias ${datas.map((t) => f(t).slice(0, 2).join('/')).join(', ')}/${a2}`;
 }
 
 /* ---------- sessão (login do painel) ---------- */
@@ -175,7 +188,7 @@ export async function listarProdutos({ admin = false } = {}) {
   if (SEM_BANCO) return [];
   let lista;
   if (DEMO) lista = demo().produtos;
-  else lista = await rest(`produtos?select=*&order=destaque.desc,nome.asc${admin ? '' : '&ativo=eq.true'}`, { auth: admin });
+  else lista = await rest(`produtos?select=*&order=destaque.desc,criado_em.asc,id.asc${admin ? '' : '&ativo=eq.true'}`, { auth: admin });
   if (admin) return lista;
   const hoje = agora().iso;
   return lista.filter((p) => p.ativo && (!p.valido_ate || p.valido_ate >= hoje));

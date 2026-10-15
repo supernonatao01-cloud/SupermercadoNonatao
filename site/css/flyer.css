@@ -199,3 +199,12 @@ dialog.detalhe[open]{animation:sheet-in .4s var(--ease)}
 @media (prefers-reduced-motion:reduce){
   .flyer,.pcard,.badge-preco,.st-fogo::before{animation:none}
 }
+
+/* ---------- abas por panfleto (logo + nome) ---------- */
+#tabs.daytabs__row{gap:10px;padding:12px 0 14px}
+.pftab{flex:none;scroll-snap-align:center;position:relative;display:flex;align-items:center;gap:10px;min-height:62px;padding:6px 18px 6px 8px;border-radius:20px;border:2px solid rgba(7,51,165,.16);background:#fff;color:var(--blue-deep);font:800 .9rem/1.1 var(--font);cursor:pointer;text-align:left;max-width:240px;transition:transform .2s var(--ease),background .25s,color .25s,border-color .25s,box-shadow .25s;-webkit-tap-highlight-color:transparent}
+.pftab:active{transform:scale(.95)}
+.pftab img,.pftab__ico{width:46px;height:46px;border-radius:14px;object-fit:contain;flex:none;background:linear-gradient(160deg,#0a2a7a,#1d63c9);padding:3px}
+.pftab__ico{display:grid;place-items:center;font-size:1.4rem}
+.pftab[aria-selected="true"]{background:var(--blue-deep);color:#fff;border-color:var(--blue-deep);box-shadow:0 10px 22px rgba(7,51,165,.35)}
+.pftab .hoje{position:absolute;right:-4px;top:-9px;background:var(--red);color:#fff;font-size:.6rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;border-radius:999px;box-shadow:0 4px 8px rgba(245,29,53,.4)}
