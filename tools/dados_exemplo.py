@@ -84,7 +84,7 @@ S = [
 ]
 
 # os IDs dos exemplos ficam todos nesta faixa
-FAIXA = "{}?id=gte.00000000-0000-4000-8000-000000000000&id=lt.00000000-0000-4000-9000-000000000000"
+FAIXA = "{}?id=gte.00000000-0000-4000-8000-000000000000&id=lt.00000000-0000-4000-8200-000000000000"
 
 if "--apagar" in sys.argv:
     s1, _ = api(FAIXA.format("produtos"), "DELETE", extra={"Prefer": "return=minimal"})
