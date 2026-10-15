@@ -97,21 +97,37 @@ const zoom = $('#zoom');
 function abrirZoom(i) {
   const p = atual(); if (!p) return;
   estado.pagina = i; mostrarZoom(); zoom.showModal();
+  // tela cheia de verdade (esconde a barra do navegador onde há suporte)
+  try { if (zoom.requestFullscreen) zoom.requestFullscreen({ navigationUI: 'hide' }).catch(() => {}); } catch { /* sem suporte */ }
 }
 function mostrarZoom() {
   const p = atual();
   $('#zoom-img').src = p.imagens[estado.pagina]; $('#zoom-img').alt = `${p.titulo}, página ${estado.pagina + 1}`;
   $('#zoom-t').textContent = p.imagens.length > 1 ? `${p.titulo} · ${estado.pagina + 1}/${p.imagens.length}` : p.titulo;
   $('#zoom-area').classList.remove('is-zoom'); $('#zoom-area').scrollTo(0, 0);
-  $('#zoom-prev').disabled = estado.pagina <= 0; $('#zoom-next').disabled = estado.pagina >= p.imagens.length - 1;
+  const ini = estado.pagina <= 0, fim = estado.pagina >= p.imagens.length - 1;
+  $('#zoom-prev').disabled = ini; $('#zoom-next').disabled = fim; $('#zoom-lp').disabled = ini; $('#zoom-ln').disabled = fim;
 }
 const passoZoom = (d) => { const p = atual(); const i = estado.pagina + d; if (i < 0 || i >= p.imagens.length) return; estado.pagina = i; mostrarZoom(); };
 $('#zoom-prev').onclick = () => passoZoom(-1);
 $('#zoom-next').onclick = () => passoZoom(1);
 $('#zoom-mais').onclick = () => $('#zoom-area').classList.toggle('is-zoom');
 $('#zoom-img').onclick = () => $('#zoom-area').classList.toggle('is-zoom');
+$('#zoom-lp').onclick = () => passoZoom(-1);
+$('#zoom-ln').onclick = () => passoZoom(1);
 $('#zoom-x').onclick = () => zoom.close();
-zoom.addEventListener('close', () => { marcarPagina(); irPara(estado.pagina, false); });
+// deslizar para trocar de página (quando não está ampliado)
+let zx = null, zy = 0;
+$('#zoom-area').addEventListener('touchstart', (e) => { zx = e.touches.length === 1 ? e.touches[0].clientX : null; zy = e.touches[0].clientY; }, { passive: true });
+$('#zoom-area').addEventListener('touchend', (e) => {
+  if (zx == null || $('#zoom-area').classList.contains('is-zoom')) return;
+  const dx = e.changedTouches[0].clientX - zx, dy = e.changedTouches[0].clientY - zy; zx = null;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) passoZoom(dx < 0 ? 1 : -1);
+}, { passive: true });
+zoom.addEventListener('close', () => {
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  marcarPagina(); irPara(estado.pagina, false);
+});
 zoom.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') passoZoom(1); if (e.key === 'ArrowLeft') passoZoom(-1); });
 
 /* ---------- ações ---------- */

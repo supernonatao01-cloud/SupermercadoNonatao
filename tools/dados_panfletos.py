@@ -6,6 +6,7 @@ Uso:
     python tools/dados_panfletos.py --demo-js caminho.js   # gera um script que carrega os mesmos dados no modo demonstração (sobe as imagens)
 """
 import io, json, os, sys, urllib.request, urllib.error
+from datetime import datetime, timedelta, timezone
 from PIL import Image
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -50,12 +51,15 @@ if "--apagar" in sys.argv:
     sys.exit(f"Exemplos removidos (produtos HTTP {s1}, panfletos HTTP {s2}).")
 
 U = {k: subir(k) for k in ARQ}
+# datas de EXEMPLO relativas a hoje (horário de Uiraúna, UTC-3), para todos aparecerem no ar agora
+HOJE = datetime.now(timezone(timedelta(hours=-3))).date()
+d = lambda n: (HOJE + timedelta(days=n)).isoformat()
 PANFLETOS = [
-    dict(id=pid(1), titulo="Outubro Rosa", subtitulo="Economia para cuidar de quem você ama.", valido_de="2026-10-14", valido_ate="2026-10-17", imagens=[U["rosa"]], ordem=0, ativo=True),
-    dict(id=pid(2), titulo="Quarta e Quinta Verde", subtitulo=None, valido_de="2026-10-14", valido_ate="2026-10-15", imagens=[U["verde"]], ordem=1, ativo=True),
-    dict(id=pid(3), titulo="Quinta da Carne", subtitulo="É dia de churrasco! Confira nossas ofertas especiais de carnes!", valido_de="2026-10-15", valido_ate="2026-10-15", imagens=[U["carne"]], ordem=2, ativo=True),
-    dict(id=pid(4), titulo="Super Sexta do Pescado", subtitulo=None, valido_de="2026-10-16", valido_ate="2026-10-16", imagens=[U["pescado"]], ordem=3, ativo=True),
-    dict(id=pid(5), titulo="Teste: vários panfletos", subtitulo="Exemplo de panfleto com várias páginas para folhear.", valido_de="2026-10-14", valido_ate="2026-10-17",
+    dict(id=pid(1), titulo="Outubro Rosa", subtitulo="Economia para cuidar de quem você ama.", valido_de=d(-1), valido_ate=d(2), imagens=[U["rosa"]], ordem=0, ativo=True),
+    dict(id=pid(2), titulo="Quarta e Quinta Verde", subtitulo=None, valido_de=d(-1), valido_ate=d(1), imagens=[U["verde"]], ordem=1, ativo=True),
+    dict(id=pid(3), titulo="Quinta da Carne", subtitulo="É dia de churrasco! Confira nossas ofertas especiais de carnes!", valido_de=d(0), valido_ate=d(0), imagens=[U["carne"]], ordem=2, ativo=True),
+    dict(id=pid(4), titulo="Super Sexta do Pescado", subtitulo=None, valido_de=d(0), valido_ate=d(3), imagens=[U["pescado"]], ordem=3, ativo=True),
+    dict(id=pid(5), titulo="Teste: vários panfletos", subtitulo="Exemplo de panfleto com várias páginas para folhear.", valido_de=d(-1), valido_ate=d(2),
          imagens=[U["rosa"], U["carne"], U["verde"], U["pescado"]], ordem=9, ativo=True),
 ]
 
