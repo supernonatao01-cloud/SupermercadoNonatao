@@ -1,5 +1,5 @@
-const CACHE = 'nonatao-v2';
-const ASSETS = ['./', 'index.html', 'css/style.css', 'js/main.js', 'assets/logo-branco.png',
+const CACHE = 'nonatao-v3';
+const ASSETS = ['./', 'index.html', 'css/style.css', 'css/pages.css', 'js/main.js', 'assets/logo-branco.png',
   'assets/modelo1.webp?v=2', 'assets/modelo2.webp', 'assets/modelo3.webp', 'assets/icon-192.png'];
 
 self.addEventListener('install', (e) => {

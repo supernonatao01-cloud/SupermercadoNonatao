@@ -82,7 +82,7 @@
 
   /* ---- aba ativa na barra inferior ---- */
   const tabs = $$('.tabbar a[data-tab]');
-  const sections = ['inicio', 'clube', 'lojas'].map((id) => document.getElementById(id));
+  const sections = ['inicio', 'lojas'].map((id) => document.getElementById(id));
   const tabObs = new IntersectionObserver((entries) => {
     entries.forEach((e) => {
       if (!e.isIntersecting) return;

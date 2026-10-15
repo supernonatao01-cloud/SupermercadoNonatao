@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sorteios · Nonatão Supermercados</title>
+  <meta name="description" content="Confira os sorteios que estão rolando no Nonatão Supermercados, veja como participar e os ganhadores. Uiraúna-PB.">
+  <meta name="theme-color" content="#0733A5">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <meta property="og:title" content="Sorteios · Nonatão Supermercados">
+  <meta property="og:description" content="Veja os sorteios que estão rolando e os ganhadores.">
+  <meta property="og:image" content="assets/og.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <script src="js/config.js"></script>
+</head>
+<body class="page">
+  <main id="conteudo">
+    <div class="demo-banner" id="demo" hidden>Modo demonstração: estes sorteios são só de exemplo e ficam neste navegador.</div>
+
+    <section class="phero">
+      <svg class="phero__ico" viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#i-gift"/></svg>
+      <div class="wrap">
+        <p class="eyebrow">Concorra a prêmios</p>
+        <h1>Confira os <em>sorteios</em></h1>
+        <p>Veja o que está rolando agora, como participar e quem já levou o prêmio para casa.</p>
+      </div>
+    </section>
+
+    <div class="wrap" id="conteudo-sorteios" aria-live="polite" style="padding-bottom:80px"></div>
+  </main>
+
+  <script type="module" src="js/sorteios.js"></script>
+</body>
+</html>

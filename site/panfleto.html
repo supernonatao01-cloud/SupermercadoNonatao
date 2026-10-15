@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Panfleto online · Nonatão Supermercados</title>
+  <meta name="description" content="Confira o panfleto online do Nonatão Supermercados: as ofertas de cada dia da semana, com preços atualizados. Uiraúna-PB.">
+  <meta name="theme-color" content="#0733A5">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <meta property="og:title" content="Panfleto online · Nonatão Supermercados">
+  <meta property="og:description" content="As ofertas de hoje no Nonatão. Veja o panfleto de cada dia da semana.">
+  <meta property="og:image" content="assets/og.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <script src="js/config.js"></script>
+</head>
+<body class="page">
+  <main id="conteudo">
+    <div class="demo-banner" id="demo" hidden>Modo demonstração: estes produtos são só de exemplo e ficam neste navegador.</div>
+
+    <section class="phero">
+      <svg class="phero__ico" viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#i-tag"/></svg>
+      <div class="wrap">
+        <p class="eyebrow">Ofertas de cada dia</p>
+        <h1>Panfleto <em>online</em></h1>
+        <p>Escolha o dia da semana e veja o que está em promoção no Nonatão. Atualizamos sempre que chegam novidades.</p>
+      </div>
+    </section>
+
+    <div class="daytabs">
+      <div class="wrap">
+        <div class="daytabs__row" role="tablist" aria-label="Dia da semana" id="tabs"></div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="toolbar">
+        <label class="search">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg>
+          <input id="busca" type="search" placeholder="Buscar produto" autocomplete="off" aria-label="Buscar produto">
+        </label>
+        <div class="cats" id="cats" aria-label="Categorias"></div>
+      </div>
+
+      <div class="resumo"><h2 id="titulo-dia">Ofertas</h2><span id="contador"></span></div>
+      <div class="grid" id="grid" aria-live="polite"></div>
+    </div>
+  </main>
+
+  <script type="module" src="js/panfleto.js"></script>
+</body>
+</html>

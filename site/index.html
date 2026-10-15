@@ -23,6 +23,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <script src="js/config.js"></script>
   <link rel="preload" as="image" href="assets/modelo2.webp" type="image/webp">
 
   <script type="application/ld+json">
@@ -62,9 +64,9 @@
         <span class="brand__txt">nonatão</span>
       </a>
       <nav class="nav" aria-label="Principal">
-        <a href="#clube">Clube de ofertas</a>
+        <a href="panfleto">Panfleto online</a>
+        <a href="sorteios">Sorteios</a>
         <a href="#lojas">Nossas lojas</a>
-        <a href="#diferenciais">Por que Nonatão</a>
       </nav>
       <button class="btn btn--yellow btn--sm" type="button" data-open-whats>
         <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-whats"/></svg>
@@ -94,7 +96,7 @@
           </h1>
           <p class="hero__sub">Economia, qualidade e tudo o que sua família precisa em um só lugar.</p>
           <div class="hero__cta">
-            <a class="btn btn--yellow btn--lg" href="#clube" data-press>
+            <a class="btn btn--yellow btn--lg" href="panfleto" data-press>
               <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-tag"/></svg>
               Ver ofertas
             </a>
@@ -167,6 +169,37 @@
              href="https://chat.whatsapp.com/Lcsv8LEJewk5SvZZ7n6JXw?s=cl&p=i&mlu=0&ilr=4">
             <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-whats"/></svg>
             Entrar no clube de ofertas
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02b · PANFLETO ONLINE + SORTEIOS -->
+    <section class="promo-home" id="panfleto">
+      <div class="wrap">
+        <div class="promo-home__head">
+          <div>
+            <p class="eyebrow eyebrow--dark">Panfleto online</p>
+            <h2 class="h2">Ofertas de hoje no Nonatão.</h2>
+            <p class="lead" style="margin:0">Cada dia da semana tem promoção. Confira o que está valendo hoje.</p>
+          </div>
+          <a class="btn btn--blue btn--lg" data-press href="panfleto">Ver o panfleto completo</a>
+        </div>
+        <p class="hint" id="demo-home" hidden style="margin-bottom:16px">Modo demonstração: produtos de exemplo.</p>
+        <div class="mini-grid" id="mini" hidden></div>
+        <div class="cards-2">
+          <a class="cta-card cta-card--blue" href="panfleto">
+            <svg class="ico-big" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-tag"/></svg>
+            <h3>Panfleto da semana</h3>
+            <p>Escolha o dia e veja todas as ofertas, com busca por produto e compartilhamento no WhatsApp.</p>
+            <span class="go">Abrir o panfleto →</span>
+          </a>
+          <a class="cta-card cta-card--red" href="sorteios">
+            <svg class="ico-big" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-gift"/></svg>
+            <span class="live-pill" id="pill-sorteios" hidden></span>
+            <h3>Confira os sorteios</h3>
+            <p>Veja o que está rolando, como participar e quem já ganhou.</p>
+            <span class="go">Ver sorteios →</span>
           </a>
         </div>
       </div>
@@ -316,6 +349,8 @@
       </div>
       <div>
         <h4>Atalhos</h4>
+        <p><a href="panfleto">Panfleto online</a></p>
+        <p><a href="sorteios">Sorteios</a></p>
         <p><a href="#clube">Clube de ofertas</a></p>
         <p><a href="#lojas">Nossas lojas</a></p>
         <p><a href="#diferenciais">Por que Nonatão</a></p>
@@ -326,12 +361,15 @@
   </footer>
 
   <!-- Barra inferior (celular) -->
-  <nav class="tabbar glass" aria-label="Navegação rápida">
+  <nav class="tabbar glass tabbar--5" aria-label="Navegação rápida">
     <a href="#inicio" data-tab="inicio" aria-current="true">
       <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-home"/></svg><span>Início</span>
     </a>
-    <a href="#clube" data-tab="clube">
-      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-tag"/></svg><span>Ofertas</span>
+    <a href="panfleto">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-tag"/></svg><span>Panfleto</span>
+    </a>
+    <a href="sorteios">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-gift"/></svg><span>Sorteios</span>
     </a>
     <a href="#lojas" data-tab="lojas">
       <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-pin"/></svg><span>Lojas</span>
@@ -423,6 +461,12 @@
       <symbol id="i-home" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3l9 8h-2.5v9h-5v-6h-3v6h-5v-9H3z"/></symbol>
       <symbol id="i-clock" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.2 13.6-5.2-3.1V6.5h1.5v5.2l4.5 2.6z"/></symbol>
       <symbol id="i-insta" viewBox="0 0 24 24"><path fill="currentColor" d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9a5.5 5.5 0 0 1-5.5 5.5h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2zm0 2A3.5 3.5 0 0 0 4 7.5v9A3.5 3.5 0 0 0 7.5 20h9a3.5 3.5 0 0 0 3.5-3.5v-9A3.5 3.5 0 0 0 16.5 4zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm5.3-3.3a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4z"/></symbol>
+      <symbol id="i-gift" viewBox="0 0 24 24"><path fill="currentColor" d="M20 7h-2.2A3 3 0 0 0 12 4.3 3 3 0 0 0 6.2 7H4a2 2 0 0 0-2 2v2a1 1 0 0 0 1 1v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a1 1 0 0 0 1-1V9a2 2 0 0 0-2-2zM15 5a1 1 0 1 1 0 2h-2.2c.2-1.2 1-2 2.2-2zM9 5c1.2 0 2 .8 2.2 2H9a1 1 0 1 1 0-2zm2 15H5v-7h6zm0-9H4V9h7zm2 9v-7h6v7zm0-9V9h7v2z"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><path fill="currentColor" d="M10 2a8 8 0 0 1 6.3 12.9l5.4 5.4-1.4 1.4-5.4-5.4A8 8 0 1 1 10 2zm0 2a6 6 0 1 0 0 12 6 6 0 0 0 0-12z"/></symbol>
+      <symbol id="i-share" viewBox="0 0 24 24"><path fill="currentColor" d="M18 16a3 3 0 0 0-2.4 1.2L8.9 13.6a3 3 0 0 0 0-3.2l6.7-3.6A3 3 0 1 0 15 5a3 3 0 0 0 .1.8L8.4 9.4a3 3 0 1 0 0 5.2l6.7 3.6A3 3 0 1 0 18 16z"/></symbol>
+      <symbol id="i-trophy" viewBox="0 0 24 24"><path fill="currentColor" d="M7 3h10v2h3a1 1 0 0 1 1 1v2a4 4 0 0 1-4 4h-.3A5 5 0 0 1 13 14.9V17h3v2h1v2H7v-2h1v-2h3v-2.1A5 5 0 0 1 7.3 12H7a4 4 0 0 1-4-4V6a1 1 0 0 1 1-1h3zm-2 4v1a2 2 0 0 0 2 2V7zm14 0h-2v3a2 2 0 0 0 2-2z"/></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-2 14V8l7 4z"/></symbol>
+      <symbol id="i-doc" viewBox="0 0 24 24"><path fill="currentColor" d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm7 1.5V9h5.5zM8 13v2h8v-2zm0 4v2h8v-2z"/></symbol>
       <symbol id="i-check" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.5 14.5L6 12l1.4-1.4 3.1 3.1 6.1-6.1L18 9z"/></symbol>
       <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2l3 6.9 7.5.7-5.7 5 1.7 7.4L12 18l-6.5 4 1.7-7.4-5.7-5 7.5-.7z"/></symbol>
       <symbol id="i-heart" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21s-8.5-5.2-8.5-11.2A4.8 4.8 0 0 1 12 7a4.8 4.8 0 0 1 8.5 2.8C20.5 15.8 12 21 12 21z"/></symbol>
@@ -430,5 +474,6 @@
   </svg>
 
   <script src="js/main.js" defer></script>
+  <script type="module" src="js/home.js"></script>
 </body>
 </html>
