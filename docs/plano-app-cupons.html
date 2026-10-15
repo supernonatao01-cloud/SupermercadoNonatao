@@ -1,0 +1,419 @@
+<title>Plano Nonatão Cupons</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: documento em coluna única com tabela de conteúdo lateral no desktop; as telas do app ficam numa fileira rolável. */
+:root{
+  --bg:#f3f5fb; --surface:#ffffff; --ink:#0d1b45; --muted:#55648f; --line:#d9e0f2;
+  --blue:#0733a5; --blue-soft:#e6ecfb; --red:#f51d35; --yellow:#ffde00; --green:#14a35a; --warn:#b45309; --warn-bg:#fff4dc;
+  --night:#041c63;
+  --display:"Baloo 2","Plus Jakarta Sans",system-ui,sans-serif;
+  --body:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#070d24; --surface:#0f1838; --ink:#e9eeff; --muted:#9db0e0; --line:#233063;
+  --blue:#6f93ff; --blue-soft:#14214f; --warn:#f6b04a; --warn-bg:#2a2110; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#070d24; --surface:#0f1838; --ink:#e9eeff; --muted:#9db0e0; --line:#233063;
+  --blue:#6f93ff; --blue-soft:#14214f; --warn:#f6b04a; --warn-bg:#2a2110; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);line-height:1.05;letter-spacing:-.015em;margin:0;text-wrap:balance}
+p{margin:0}
+a{color:var(--blue)}
+.wrap{max-width:1120px;margin-inline:auto}
+
+/* topo */
+.hero{padding-block:44px 28px}
+.eyebrow{font:800 .72rem/1 var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--red)}
+.hero h1{font-size:clamp(2.4rem,7vw,4.6rem);color:var(--ink);margin-top:12px}
+.hero h1 em{font-style:normal;color:var(--blue);background:linear-gradient(transparent 62%,var(--yellow) 62% 92%,transparent 92%)}
+.hero .lead{max-width:44rem;color:var(--muted);font-size:1.12rem;margin-top:16px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0;margin-top:30px;border-block:1.5px solid var(--ink)}
+.facts div{padding:14px 18px 14px 0}
+.facts dt{font:800 .68rem/1 var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.facts dd{margin:6px 0 0;font:700 1.02rem/1.3 var(--body)}
+
+/* navegação */
+.layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px;align-items:start}
+.toc{position:sticky;top:max(16px,env(safe-area-inset-top,0px));padding-top:8px;font-size:.88rem}
+.toc b{display:block;font:800 .68rem/1 var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.toc a{display:block;text-decoration:none;color:var(--muted);padding:6px 0 6px 12px;border-left:2px solid var(--line);font-weight:600}
+.toc a:hover{color:var(--blue);border-color:var(--blue)}
+@media (max-width:900px){.layout{display:block}.toc{display:none}}
+
+section{padding-block:40px 8px;border-top:1px solid var(--line);scroll-margin-top:16px}
+section:first-of-type{border-top:0}
+section h2{font-size:clamp(1.7rem,4vw,2.5rem);color:var(--ink)}
+section h3{font-size:1.3rem;margin-top:28px;color:var(--ink)}
+.sub{color:var(--muted);margin-top:10px;max-width:44rem}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin-top:22px}
+.cols>div{min-width:0}
+ul.plain{margin:10px 0 0;padding-left:1.15rem}
+ul.plain li{margin:6px 0}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px}
+.box h3{margin-top:0;font-size:1.15rem}
+.note{background:var(--warn-bg);border-left:4px solid var(--warn);border-radius:10px;padding:14px 16px;margin-top:20px;color:var(--ink)}
+.note b{color:var(--warn)}
+.tag{display:inline-block;font:800 .66rem/1 var(--body);letter-spacing:.1em;text-transform:uppercase;padding:5px 9px;border-radius:999px;background:var(--blue-soft);color:var(--blue);margin-right:6px}
+.tag.red{background:#ffe3e7;color:#b1122a}.tag.ok{background:#dcf5e8;color:#0b7a3a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tag.red{background:#3a1520;color:#ff8da0}:root:not([data-theme="light"]) .tag.ok{background:#10301f;color:#6fe0a1}}
+:root[data-theme="dark"] .tag.red{background:#3a1520;color:#ff8da0}:root[data-theme="dark"] .tag.ok{background:#10301f;color:#6fe0a1}
+
+/* fluxo */
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:22px;counter-reset:p;padding:0;list-style:none}
+.flow li{counter-increment:p;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;position:relative;min-width:0}
+.flow li::before{content:counter(p);display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;font:800 .9rem var(--display);margin-bottom:10px}
+.flow b{display:block;font:700 1rem/1.2 var(--body);margin-bottom:4px}
+.flow span{color:var(--muted);font-size:.9rem}
+
+/* telas */
+.telas{display:flex;gap:26px;overflow-x:auto;padding:26px 4px 26px;margin-top:14px;scroll-snap-type:x proximity}
+.tela{flex:none;width:236px;scroll-snap-align:start}
+.tela figcaption{margin-top:12px;font-size:.88rem;color:var(--muted)}
+.tela figcaption b{display:block;color:var(--ink);font:700 .98rem var(--body);margin-bottom:2px}
+.phone{position:relative;width:236px;height:480px;border-radius:34px;background:#fff;border:7px solid #0b1235;box-shadow:0 22px 40px rgba(4,20,70,.28);overflow:hidden;color:#0d1b45;font-size:11px;line-height:1.35}
+.phone::before{content:"";position:absolute;z-index:5;top:7px;left:50%;translate:-50% 0;width:66px;height:17px;border-radius:12px;background:#0b1235}
+.st{height:36px;flex:none}
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;font-family:var(--body)}
+.blue{background:linear-gradient(170deg,#1d57d8,#0733a5 55%,#041c63);color:#fff}
+.pad{padding:0 14px}
+.ph-h{font:800 18px/1 var(--display)}
+.pill{display:inline-block;background:var(--yellow);color:#1b2a66;border-radius:999px;padding:3px 9px;font:800 9px/1 var(--body);letter-spacing:.04em}
+.btn-s{display:block;text-align:center;background:var(--yellow);color:#1b2a66;border-radius:999px;padding:11px;font:800 12px/1 var(--body)}
+.btn-s.red{background:var(--red);color:#fff}
+.inp{background:#fff;border:1.5px solid #cfd8ef;border-radius:11px;padding:9px 10px;color:#6b7aa6;margin-top:7px}
+.inp small{display:block;font:700 8px/1 var(--body);color:#0733a5;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.card-s{background:#fff;color:#0d1b45;border-radius:14px;padding:11px;box-shadow:0 6px 14px rgba(4,20,70,.14)}
+.bar{height:7px;border-radius:7px;background:#dfe6f8;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--red),#ff6a78);border-radius:7px}
+.tab{position:absolute;left:8px;right:8px;bottom:8px;height:46px;border-radius:18px;background:#0733a5;display:flex;justify-content:space-around;align-items:center;color:#fff;font:700 8px/1 var(--body)}
+.tab span{opacity:.75;text-align:center;font-size:7px}.tab .on{opacity:1;color:var(--yellow)}
+.scan{position:relative;flex:none;width:50px;height:50px;border-radius:50%;background:var(--red);border:3px solid #fff;margin-top:-26px;display:grid;place-items:center;box-shadow:0 8px 16px rgba(0,0,0,.4);font:800 7px/1 var(--body);color:#fff}
+.cam{flex:1;background:radial-gradient(circle at 50% 40%,#2a3a5e,#0b1022);position:relative}
+.frame{position:absolute;left:50%;top:44%;translate:-50% -50%;width:150px;height:150px}
+.frame i{position:absolute;width:30px;height:30px;border:4px solid var(--yellow)}
+.frame i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0;border-radius:10px 0 0 0}
+.frame i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0;border-radius:0 10px 0 0}
+.frame i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0;border-radius:0 0 0 10px}
+.frame i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0;border-radius:0 0 10px 0}
+.qr{position:absolute;inset:34px;background:conic-gradient(from 0deg,#fff 0 25%,#0b1022 0 50%,#fff 0 75%,#0b1022 0) 0 0/16px 16px;opacity:.85;border-radius:6px}
+.laser{position:absolute;left:10px;right:10px;top:50%;height:2px;background:var(--red);box-shadow:0 0 10px var(--red)}
+.nums{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.nums b{background:#e6ecfb;color:#0733a5;border-radius:8px;padding:5px 7px;font:800 11px/1 var(--display);letter-spacing:.04em}
+.nums b.new{background:var(--yellow);color:#1b2a66}
+.big{font:800 40px/1 var(--display)}
+.chk{width:54px;height:54px;border-radius:50%;background:var(--green);display:grid;place-items:center;font:800 30px/1 var(--display);color:#fff;margin:6px auto 8px;box-shadow:0 0 0 7px rgba(20,163,90,.2)}
+.roll{display:flex;gap:6px;justify-content:center;margin:12px 0}
+.roll b{width:36px;height:50px;border-radius:10px;background:#fff;color:#0733a5;display:grid;place-items:center;font:800 28px/1 var(--display);box-shadow:0 6px 12px rgba(0,0,0,.3)}
+.hint{font-size:.82rem;color:var(--muted);margin-top:4px}
+
+/* tabelas e regras */
+.tw{overflow-x:auto;margin-top:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.92rem}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:800 .68rem/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);background:var(--blue-soft)}
+tr:last-child td{border-bottom:0}
+code{font:600 .86em ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--blue-soft);color:var(--blue);padding:2px 6px;border-radius:6px;word-break:break-word}
+.chave{display:flex;flex-wrap:wrap;gap:3px;margin-top:12px;font:700 .8rem ui-monospace,Menlo,monospace}
+.chave span{padding:6px 8px;border-radius:8px;background:var(--blue-soft);color:var(--ink)}
+.chave small{display:block;font:700 .56rem var(--body);letter-spacing:.06em;color:var(--muted);text-transform:uppercase;margin-top:3px}
+.timeline{display:grid;gap:0;margin-top:22px;border-left:3px solid var(--blue);margin-left:6px}
+.timeline>div{padding:0 0 22px 22px;position:relative}
+.timeline>div::before{content:"";position:absolute;left:-10px;top:4px;width:17px;height:17px;border-radius:50%;background:var(--bg);border:4px solid var(--blue)}
+.timeline b{font:800 1.1rem var(--display);display:block}
+.timeline small{font:800 .68rem/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--red)}
+.timeline p{color:var(--muted);margin-top:4px;max-width:44rem}
+footer{margin-top:44px;padding-top:20px;border-top:1.5px solid var(--ink);color:var(--muted);font-size:.9rem}
+@media (max-width:520px){.hero{padding-block:30px 20px}.facts div{padding-right:10px}}
+@media (prefers-reduced-motion:no-preference){.laser{animation:scan 2.4s ease-in-out infinite alternate}@keyframes scan{from{top:18%}to{top:80%}}}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Plano de projeto · rascunho para aprovação</p>
+    <h1>Nonatão <em>Cupons</em></h1>
+    <p class="lead">Um aplicativo para o cliente cadastrar o CPF, escanear o QR code das notas fiscais e ganhar números para os sorteios do mercado. O próprio sistema confere as notas, reúne os números de cada campanha e apura o ganhador ao vivo, com registro para auditoria.</p>
+    <dl class="facts">
+      <div><dt>Formato</dt><dd>App instalável (PWA), separado do site</dd></div>
+      <div><dt>Entrada do cliente</dt><dd>CPF e senha</dd></div>
+      <div><dt>Leitura da nota</dt><dd>QR code + consulta à SEFAZ-PB</dd></div>
+      <div><dt>Regras</dt><dd>Por valor e por produto, várias campanhas</dd></div>
+      <div><dt>Prazo estimado</dt><dd>8 semanas, versão completa</dd></div>
+    </dl>
+  </header>
+
+  <div class="layout">
+    <nav class="toc" aria-label="Seções">
+      <b>Neste plano</b>
+      <a href="#como">Como funciona</a>
+      <a href="#telas">Telas do app</a>
+      <a href="#painel">Painel do mercado</a>
+      <a href="#regras">Regras e números</a>
+      <a href="#nota">Leitura da nota</a>
+      <a href="#fraude">Antifraude</a>
+      <a href="#sorteio">Sorteio ao vivo</a>
+      <a href="#tech">Tecnologia</a>
+      <a href="#dados">Dados e LGPD</a>
+      <a href="#cronograma">Cronograma</a>
+      <a href="#riscos">Riscos e pendências</a>
+    </nav>
+
+    <main>
+      <section id="como">
+        <h2>Como funciona</h2>
+        <p class="sub">O cliente nunca digita valores. Ele escaneia, o sistema valida e os números aparecem na hora, separados por campanha.</p>
+        <ol class="flow">
+          <li><b>Cadastro</b><span>Nome, CPF, data de nascimento, celular e senha. Aceita o regulamento.</span></li>
+          <li><b>Compra</b><span>Compra em qualquer loja do Nonatão e guarda a nota fiscal.</span></li>
+          <li><b>Escaneia</b><span>Aponta a câmera para o QR code da nota dentro do app.</span></li>
+          <li><b>Validação</b><span>O sistema confere a nota na SEFAZ, a loja, a data e se ela já foi usada.</span></li>
+          <li><b>Números</b><span>Cada campanha ativa soma a compra pela sua regra e gera números.</span></li>
+          <li><b>Apuração</b><span>No dia, o sistema sorteia ao vivo e publica o resultado e a ata.</span></li>
+        </ol>
+        <div class="cols">
+          <div class="box"><h3>Para o cliente</h3>
+            <ul class="plain"><li>Ver todos os números de cada campanha</li><li>Saber quanto falta para o próximo número</li><li>Acompanhar o sorteio e o resultado no app</li><li>Receber aviso se for o ganhador</li></ul></div>
+          <div class="box"><h3>Para o mercado</h3>
+            <ul class="plain"><li>Criar campanhas com regra, período e prêmio</li><li>Conferir notas em análise e bloquear fraudes</li><li>Fazer a apuração ao vivo e gerar a ata</li><li>Ver quantos clientes e notas cada campanha trouxe</li></ul></div>
+        </div>
+      </section>
+
+      <section id="telas">
+        <h2>Telas do app</h2>
+        <p class="sub">Mesma identidade do site: azul intenso, vermelho e amarelo, cantos arredondados, barra inferior com o botão de escanear no centro. Os desenhos abaixo são esboços de composição, não a arte final.</p>
+        <div class="telas" role="list" aria-label="Esboços das telas principais">
+
+          <figure class="tela" role="listitem"><div class="phone"><div class="scr blue"><div class="st"></div><div class="pad">
+            <div class="ph-h" style="font-size:22px;margin-top:6px">Bem-vindo ao<br>Nonatão Cupons</div>
+            <p style="opacity:.85;margin:6px 0 10px">Cadastre-se e concorra com as suas notas fiscais.</p>
+            <div class="inp"><small>Nome</small>Maria da Silva</div>
+            <div class="inp"><small>CPF</small>000.000.000-00</div>
+            <div class="inp"><small>Celular</small>(83) 9 0000-0000</div>
+            <div class="inp"><small>Senha</small>••••••••</div>
+            <p style="margin:9px 0;font-size:9px;opacity:.85">☑ Li e aceito o regulamento e a política de privacidade</p>
+            <span class="btn-s">Criar minha conta</span></div></div></div>
+            <figcaption><b>Cadastro</b>CPF validado na hora. Pede data de nascimento para barrar menores.</figcaption></figure>
+
+          <figure class="tela" role="listitem"><div class="phone"><div class="scr" style="background:#eef2ff"><div class="blue" style="padding:36px 14px 16px;border-radius:0 0 22px 22px">
+            <div style="opacity:.8">Olá, Maria</div><div class="ph-h">Seus números</div>
+            <div class="big" style="margin-top:6px">27</div><span class="pill">+3 hoje</span></div>
+            <div class="pad" style="margin-top:12px">
+              <div class="card-s"><b style="font:800 13px var(--display)">Moto elétrica</b><div style="color:#55648f">Sorteio em 14 dias</div>
+                <div class="nums"><b>00412</b><b>00413</b><b>00871</b></div>
+                <div style="margin-top:7px;font-size:9px">Faltam <b>R$ 18,40</b> para o próximo número</div><div class="bar"><i style="width:63%"></i></div></div>
+              <div class="card-s" style="margin-top:9px"><b style="font:800 13px var(--display)">Air Fryer · Jucurutu</b><div style="color:#55648f">Compre 1 produto Jucurutu</div></div></div>
+            <div class="tab"><span class="on">Início</span><span>Campanhas</span><div class="scan">Escanear</div><span>Notas</span><span>Perfil</span></div></div></div>
+            <figcaption><b>Início</b>Total de números, campanhas ativas e quanto falta para o próximo.</figcaption></figure>
+
+          <figure class="tela" role="listitem"><div class="phone"><div class="scr" style="background:#0b1022;color:#fff"><div class="st"></div>
+            <div class="pad" style="text-align:center"><div class="ph-h">Escanear nota</div><p style="opacity:.8;margin-top:4px">Aponte para o QR code da nota fiscal</p></div>
+            <div class="cam"><div class="frame"><i></i><i></i><i></i><i></i><div class="qr"></div><div class="laser"></div></div></div>
+            <div class="pad" style="padding-bottom:16px;padding-top:12px"><span class="btn-s" style="background:#ffffff22;color:#fff;border:1.5px solid #ffffff66">Digitar a chave de 44 dígitos</span></div></div></div>
+            <figcaption><b>Escanear</b>Câmera com moldura e laser. Se o QR estiver apagado, o cliente digita a chave.</figcaption></figure>
+
+          <figure class="tela" role="listitem"><div class="phone"><div class="scr blue"><div class="st"></div><div class="pad" style="text-align:center">
+            <div class="chk">✓</div><div class="ph-h" style="font-size:20px">Nota válida!</div>
+            <p style="opacity:.85;margin-top:4px">Supermercado Nonatão · Loja 2<br>R$ 187,40 · 15/10/2026</p>
+            <div style="margin-top:12px;text-align:left"><div class="card-s"><b style="font:800 12px var(--display)">Moto elétrica</b>
+              <div class="nums"><b class="new">00871</b><b class="new">00872</b><b class="new">00873</b></div><div style="margin-top:6px;font-size:9px;color:#55648f">3 números novos (R$ 50 = 1 número)</div></div>
+              <div class="card-s" style="margin-top:8px"><b style="font:800 12px var(--display)">Patinete · Frisco</b><div style="font-size:9px;color:#55648f">8 unidades de Frisco 18g: 1 número</div><div class="nums"><b class="new">00311</b></div></div></div>
+            <span class="btn-s" style="margin-top:12px">Escanear outra nota</span></div></div></div>
+            <figcaption><b>Resultado da leitura</b>Mostra a nota, o valor e os números ganhos em cada campanha, com festa na tela.</figcaption></figure>
+
+          <figure class="tela" role="listitem"><div class="phone"><div class="scr" style="background:#eef2ff"><div class="blue" style="padding:36px 14px 14px;border-radius:0 0 22px 22px">
+            <div class="ph-h">Moto elétrica</div><div style="opacity:.85">Ação Três Corações</div>
+            <div style="display:flex;gap:5px;margin-top:9px"><div class="card-s" style="padding:6px 9px;text-align:center"><b style="font:800 17px var(--display)">14</b><div style="font-size:8px">dias</div></div><div class="card-s" style="padding:6px 9px;text-align:center"><b style="font:800 17px var(--display)">06</b><div style="font-size:8px">horas</div></div><div class="card-s" style="padding:6px 9px;text-align:center"><b style="font:800 17px var(--display)">32</b><div style="font-size:8px">min</div></div></div></div>
+            <div class="pad" style="margin-top:12px"><b>Seus 8 números</b>
+              <div class="nums"><b>00412</b><b>00413</b><b>00871</b><b>00872</b><b>00873</b><b>01120</b><b>01121</b><b>01304</b></div>
+              <div class="card-s" style="margin-top:10px"><b>Como participar</b><div style="color:#55648f;font-size:9px">1 bebida proteica ou 1 barra de proteína = 1 número.</div></div>
+              <div style="margin-top:8px;color:#0733a5;font-weight:800;font-size:10px">Ver regulamento ›</div></div></div></div>
+            <figcaption><b>Minha campanha</b>Contagem regressiva, todos os números do cliente e o regulamento.</figcaption></figure>
+
+          <figure class="tela" role="listitem"><div class="phone"><div class="scr blue"><div class="st"></div><div class="pad" style="text-align:center">
+            <span class="pill" style="background:var(--red);color:#fff">● AO VIVO</span><div class="ph-h" style="font-size:20px;margin-top:8px">Sorteio da moto</div>
+            <p style="opacity:.85;margin-top:4px">1.248 participantes · 6.930 números</p>
+            <div class="roll"><b>0</b><b>4</b><b>1</b><b>2</b><b>?</b></div>
+            <div class="card-s" style="text-align:left"><div style="font-size:9px;color:#55648f">Número sorteado</div><div class="big" style="font-size:30px;color:#0733a5">00412</div><div style="font-size:10px">Maria S. · Uiraúna</div></div>
+            <p style="margin-top:9px;font-size:9px;opacity:.85">Semente e lista de números registradas<br>antes do início. Ata disponível ao final.</p></div></div></div>
+            <figcaption><b>Sorteio ao vivo</b>Os dígitos giram, o número aparece e o resultado fica registrado.</figcaption></figure>
+        </div>
+
+        <h3>Princípios de design</h3>
+        <div class="cols">
+          <div><b>Um gesto principal.</b> Escanear é o botão central e maior de toda a barra inferior. Tudo mais é consulta.</div>
+          <div><b>Feedback imediato.</b> Cada nota termina numa tela que diz o valor lido e quantos números entraram, em cada campanha.</div>
+          <div><b>Linguagem simples.</b> “Faltam R$ 18,40 para o próximo número” em vez de saldo e regras. Textos grandes, botões com mais de 44 px.</div>
+          <div><b>Funciona em celular simples.</b> App leve, poucas animações pesadas e modo de movimento reduzido respeitado.</div>
+        </div>
+      </section>
+
+      <section id="painel">
+        <h2>Painel do mercado</h2>
+        <p class="sub">Uma área web protegida por login, usada pela equipe no celular ou no computador.</p>
+        <div class="tw"><table>
+          <tr><th>Módulo</th><th>O que a equipe faz</th></tr>
+          <tr><td><b>Campanhas</b></td><td>Cria a campanha: nome, prêmio, arte, período de compras, data e hora da apuração, regra de números, limites e regulamento em PDF. Duplica uma campanha anterior.</td></tr>
+          <tr><td><b>Notas</b></td><td>Lista das notas lidas com situação: válida, em análise, recusada. Abre uma nota em análise e decide. Filtros por cliente, loja e data.</td></tr>
+          <tr><td><b>Alertas de fraude</b></td><td>Notas repetidas, volume incomum de um mesmo CPF ou aparelho, notas fora do período. Bloqueia ou libera números.</td></tr>
+          <tr><td><b>Participantes</b></td><td>Busca por nome ou CPF, histórico de notas e números, pedido de exclusão de dados (LGPD).</td></tr>
+          <tr><td><b>Apuração</b></td><td>Congela a lista de números, escolhe o telão de transmissão, executa o sorteio, define suplentes e gera a ata em PDF.</td></tr>
+          <tr><td><b>Ganhadores</b></td><td>Dados de contato, aviso pelo WhatsApp, controle de entrega do prêmio com foto e prazo.</td></tr>
+          <tr><td><b>Relatórios</b></td><td>Notas por dia e por loja, ticket médio, clientes novos, números por campanha. Exporta planilha.</td></tr>
+          <tr><td><b>Equipe</b></td><td>Perfis: administrador, marketing (cria campanhas) e atendimento (só analisa notas). Registro de quem fez cada mudança.</td></tr>
+        </table></div>
+      </section>
+
+      <section id="regras">
+        <h2>Regras e números</h2>
+        <p class="sub">Cada campanha escolhe uma regra. Uma mesma nota pode gerar números em várias campanhas ao mesmo tempo.</p>
+        <div class="cols">
+          <div class="box"><span class="tag">Por valor</span><h3 style="margin-top:10px">A cada R$ X, 1 número</h3>
+            <p class="hint">Exemplo com X = R$ 50. O que sobra de uma nota soma na próxima, então ninguém perde centavos.</p>
+            <ul class="plain"><li>Nota de R$ 187,40 gera 3 números e guarda R$ 37,40</li><li>Próxima nota de R$ 20,00 chega a R$ 57,40 e gera 1 número</li><li>Opções: valor mínimo por nota, limite de números por CPF, lojas que participam</li></ul></div>
+          <div class="box"><span class="tag red">Por produto</span><h3 style="margin-top:10px">N unidades de uma marca, 1 número</h3>
+            <p class="hint">Como as ações atuais: 8 unidades de Frisco 18g, 1 produto Jucurutu, 2 unidades de Fini.</p>
+            <ul class="plain"><li>O sistema lê os itens da nota e conta as unidades que combinam com o código de barras (EAN) ou com palavras da descrição</li><li>A equipe cadastra a lista de produtos da ação no painel</li><li>Opções: limite de números por nota e por CPF</li></ul></div>
+        </div>
+        <h3>Como os números são entregues</h3>
+        <ul class="plain">
+          <li>Cada campanha tem a sua própria sequência (00001, 00002…), entregue na ordem de validação, sem repetir.</li>
+          <li>Os números são gravados numa operação única junto com a nota. Duas notas lidas ao mesmo tempo nunca recebem o mesmo número.</li>
+          <li>Se uma nota for anulada depois, os números dela são cancelados e a sequência continua registrada, sem apagar histórico.</li>
+          <li>Campanha encerrada para compras não aceita mais notas. A lista de números é congelada antes da apuração.</li>
+        </ul>
+      </section>
+
+      <section id="nota">
+        <h2>Leitura da nota fiscal</h2>
+        <p class="sub">O QR code da NFC-e aponta para a consulta da SEFAZ e carrega a chave de acesso de 44 dígitos. O valor da compra não vem no QR code; é preciso consultar a nota.</p>
+        <div class="chave" aria-label="Estrutura da chave de acesso">
+          <div><span>25</span><small>UF (PB)</small></div><div><span>2610</span><small>Ano e mês</small></div><div><span>00000000000100</span><small>CNPJ do mercado</small></div><div><span>65</span><small>Modelo NFC-e</small></div><div><span>001</span><small>Série</small></div><div><span>000123456</span><small>Número</small></div><div><span>1</span><small>Emissão</small></div><div><span>12345678</span><small>Código</small></div><div><span>0</span><small>DV</small></div>
+        </div>
+        <p class="hint">Exemplo ilustrativo. Só pela chave, o sistema já recusa notas de outro estado, de outro CNPJ e de outro mês antes de consultar qualquer coisa.</p>
+        <h3>Caminho de uma nota</h3>
+        <div class="timeline">
+          <div><small>Passo 1 · No aparelho</small><b>Ler o QR code</b><p>Câmera do celular. Onde o navegador não lê QR sozinho, o app usa uma biblioteca de leitura. Se falhar, o cliente digita os 44 dígitos.</p></div>
+          <div><small>Passo 2 · Servidor</small><b>Validar a chave</b><p>Confere dígito verificador, UF, modelo, CNPJ das lojas participantes, data dentro do período e se a chave já foi usada por qualquer cliente.</p></div>
+          <div><small>Passo 3 · Servidor</small><b>Consultar a SEFAZ-PB</b><p>Busca valor total, data de emissão e itens. Resposta guardada para não consultar duas vezes a mesma nota.</p></div>
+          <div><small>Passo 4 · Servidor</small><b>Aplicar as regras</b><p>Calcula os números de cada campanha ativa e grava tudo junto: nota, itens e números.</p></div>
+          <div><small>Passo 5 · App</small><b>Mostrar o resultado</b><p>Nota válida e números ganhos. Se a SEFAZ estiver fora do ar, a nota fica “em análise” e os números entram assim que a consulta funcionar.</p></div>
+        </div>
+        <div class="note"><b>Ponto mais arriscado do projeto.</b> A consulta pública da SEFAZ foi feita para pessoas, não para sistemas. Ela pode ter captcha, mudar de formato ou limitar acessos. Por isso a primeira semana inclui um teste real com notas das duas lojas, antes de construir o resto. Se a consulta automática não se sustentar, há dois caminhos prontos: um serviço pago de consulta de NFC-e ou a integração com o sistema de caixa do mercado.</div>
+      </section>
+
+      <section id="fraude">
+        <h2>Antifraude</h2>
+        <p class="sub">Notas fiscais valem números, então precisam de proteção. As travas abaixo trabalham sozinhas e deixam só os casos duvidosos para a equipe.</p>
+        <div class="tw"><table>
+          <tr><th>Risco</th><th>Como o sistema reage</th></tr>
+          <tr><td>Mesma nota enviada duas vezes ou por dois clientes</td><td>A chave de acesso é única no banco. A segunda tentativa é recusada, com aviso ao cliente.</td></tr>
+          <tr><td>Nota de outro mercado, outro estado ou fora do período</td><td>Recusa automática pela chave, antes da consulta.</td></tr>
+          <tr><td>Digitar chave inventada</td><td>Dígito verificador e consulta na SEFAZ. Chave que a SEFAZ não reconhece não gera número.</td></tr>
+          <tr><td>Um CPF com volume muito acima do normal</td><td>Limites por dia e por campanha, e alerta na fila de análise.</td></tr>
+          <tr><td>Vários cadastros no mesmo aparelho</td><td>Alerta por aparelho e por rede. Cadastro com CPF validado, maioridade e celular.</td></tr>
+          <tr><td>Robôs criando contas e enviando notas</td><td>Verificação anti-robô no cadastro e limite de tentativas por minuto.</td></tr>
+          <tr><td>Funcionário ou parente participando</td><td>Lista de CPFs impedidos, se o regulamento exigir.</td></tr>
+        </table></div>
+        <div class="note"><b>CPF na nota.</b> Se a nota trouxer o CPF do consumidor, o sistema pode exigir que seja o mesmo CPF do cadastro. Nem toda nota tem CPF, então essa regra fica opcional por campanha.</div>
+      </section>
+
+      <section id="sorteio">
+        <h2>Sorteio ao vivo e auditoria</h2>
+        <p class="sub">O sistema faz a apuração na hora, em tela cheia para transmissão, e deixa tudo registrado para conferência.</p>
+        <ol class="flow">
+          <li><b>Encerrar</b><span>A campanha para de aceitar notas. A equipe revisa as pendentes.</span></li>
+          <li><b>Congelar</b><span>O sistema gera a lista final de números e registra o código de conferência (hash) da lista.</span></li>
+          <li><b>Publicar</b><span>O código da lista e a hora marcada ficam visíveis no app antes do sorteio.</span></li>
+          <li><b>Sortear</b><span>Número escolhido por gerador aleatório seguro, sem tendência. Ganhador e suplentes em ordem.</span></li>
+          <li><b>Registrar</b><span>Ata em PDF com data, lista congelada, número sorteado, ganhador e responsável.</span></li>
+          <li><b>Avisar</b><span>Ganhador notificado e resultado publicado em Sorteios, no site e no app.</span></li>
+        </ol>
+        <div class="cols">
+          <div class="box"><h3>O que fica registrado</h3><ul class="plain"><li>Quem executou, de qual conta e quando</li><li>Lista de números congelada e o seu código de conferência</li><li>Número sorteado e a ordem dos suplentes</li><li>Toda alteração de nota ou de números, com data e autor</li></ul></div>
+          <div class="box"><h3>Boas práticas de transparência</h3><ul class="plain"><li>Transmitir a apuração ao vivo no Instagram do mercado</li><li>Deixar a lista de números verificável por quem quiser, sem expor dados pessoais</li><li>Publicar a ata no app depois do sorteio</li></ul></div>
+        </div>
+        <div class="note"><b>Regras da autorização.</b> A forma de apuração do sorteio, o prazo para reclamar e a entrega do prêmio seguem o que está no regulamento autorizado. Antes da programação, vamos conferir esses itens com o documento e, se preciso, com o contador ou advogado do mercado, para o sistema ficar idêntico ao que foi aprovado.</div>
+      </section>
+
+      <section id="tech">
+        <h2>Tecnologia</h2>
+        <p class="sub">Projeto novo e separado do site, com o mesmo visual e a mesma conta de hospedagem. Escolhas simples, baratas e que a equipe consegue manter.</p>
+        <div class="tw"><table>
+          <tr><th>Peça</th><th>Escolha</th><th>Por quê</th></tr>
+          <tr><td>App do cliente</td><td>PWA (instalável pelo navegador) com HTML, CSS e JavaScript</td><td>Mesma base do site, instala na tela inicial, usa a câmera e atualiza sem loja. Pode virar app de loja mais tarde.</td></tr>
+          <tr><td>Leitura do QR</td><td>Leitor nativo do navegador quando existir, e biblioteca de leitura nos demais</td><td>Funciona em Android e iPhone, com a câmera traseira e boa luz.</td></tr>
+          <tr><td>Banco e login</td><td>Supabase em projeto próprio (PostgreSQL)</td><td>Já usado no site. Regras de segurança por linha protegem os dados de cada cliente.</td></tr>
+          <tr><td>Consulta da nota e regras</td><td>Funções no servidor (Supabase Edge Functions)</td><td>A chave, a SEFAZ e a conta dos números nunca ficam no aparelho do cliente, então não dá para burlar.</td></tr>
+          <tr><td>Login com CPF</td><td>CPF como identificador e senha</td><td>Escolha do mercado. Precisa de um jeito de recuperar a senha (ver riscos).</td></tr>
+          <tr><td>Hospedagem</td><td>Vercel, com domínio próprio</td><td>Mesma que o site. Endereço sugerido: cupons.seudominio.com.br.</td></tr>
+          <tr><td>Painel</td><td>Página protegida do mesmo projeto</td><td>Mesmo padrão do painel atual, com perfis de acesso.</td></tr>
+        </table></div>
+        <p class="hint" style="margin-top:12px">Custos de referência: o plano gratuito do Supabase atende o piloto; durante uma campanha grande vale o plano pago (cerca de US$ 25 por mês, confira o valor atual). Um serviço pago de consulta de NFC-e, se for necessário, tem preço próprio por consulta.</p>
+      </section>
+
+      <section id="dados">
+        <h2>Dados e LGPD</h2>
+        <h3>Tabelas principais</h3>
+        <div class="cols">
+          <div class="box"><h3>Clientes</h3><p class="hint">Nome, CPF (guardado protegido), data de nascimento, celular, aceite do regulamento com data e versão.</p></div>
+          <div class="box"><h3>Campanhas</h3><p class="hint">Prêmio, arte, período de compras, data da apuração, tipo de regra e seus valores, limites, lojas e regulamento.</p></div>
+          <div class="box"><h3>Notas</h3><p class="hint">Chave de acesso única, loja, data, valor, itens, situação e quem escaneou.</p></div>
+          <div class="box"><h3>Números</h3><p class="hint">Campanha, cliente, nota de origem e o número. Nunca repetem dentro da campanha.</p></div>
+          <div class="box"><h3>Apurações</h3><p class="hint">Lista congelada e seu código de conferência, número sorteado, ganhador, suplentes e ata.</p></div>
+          <div class="box"><h3>Auditoria</h3><p class="hint">Registro de tudo o que a equipe e o sistema alteram, com autor e hora.</p></div>
+        </div>
+        <h3>Cuidados com os dados pessoais</h3>
+        <ul class="plain">
+          <li>Pedir só o necessário: nome, CPF, nascimento e celular.</li>
+          <li>Texto claro de consentimento no cadastro e política de privacidade acessível no app.</li>
+          <li>CPF protegido no banco e mostrado mascarado (000.***.***-00) para a equipe, exceto na apuração.</li>
+          <li>Cada cliente só enxerga os próprios dados, garantido por regra no banco.</li>
+          <li>Pedido de exclusão e de cópia dos dados atendido pelo painel, respeitando o prazo exigido pelo regulamento.</li>
+          <li>Acesso da equipe por perfil e com registro de quem consultou o quê.</li>
+        </ul>
+      </section>
+
+      <section id="cronograma">
+        <h2>Cronograma</h2>
+        <p class="sub">Oito semanas até a versão completa, com um piloto em uma campanha antes do lançamento geral.</p>
+        <div class="timeline">
+          <div><small>Semana 1</small><b>Regras e teste da SEFAZ</b><p>Conferir o regulamento autorizado. Teste real da consulta com notas das duas lojas. Aprovar o fluxo e o visual das telas.</p></div>
+          <div><small>Semanas 2 e 3</small><b>Cadastro, login e escaneamento</b><p>Cadastro com CPF e senha, leitura do QR, validação da chave e consulta da nota, em celulares de teste.</p></div>
+          <div><small>Semana 4</small><b>Campanhas e números</b><p>Regras por valor e por produto, várias campanhas por nota, saldo que acumula e tela “Meus números”.</p></div>
+          <div><small>Semana 5</small><b>Painel e antifraude</b><p>Painel da equipe, fila de notas em análise, alertas e relatórios.</p></div>
+          <div><small>Semana 6</small><b>Sorteio ao vivo e auditoria</b><p>Congelamento da lista, apuração em tela cheia, suplentes, ata em PDF e aviso ao ganhador.</p></div>
+          <div><small>Semana 7</small><b>Piloto com clientes reais</b><p>Uma campanha curta, com poucos clientes, para ajustar leitura de notas, textos e desempenho.</p></div>
+          <div><small>Semana 8</small><b>Lançamento</b><p>Divulgação no site e nas lojas, cartazes com QR code do app e acompanhamento diário na primeira campanha.</p></div>
+        </div>
+      </section>
+
+      <section id="riscos">
+        <h2>Riscos e pendências</h2>
+        <div class="tw"><table>
+          <tr><th>Item</th><th>Situação</th><th>O que fazer</th></tr>
+          <tr><td>Consulta automática da SEFAZ-PB</td><td><span class="tag red">Risco alto</span></td><td>Testar na semana 1. Manter plano B: serviço pago de consulta ou integração com o caixa.</td></tr>
+          <tr><td>Recuperar senha com login por CPF</td><td><span class="tag red">Decisão</span></td><td>Sugestão: celular obrigatório no cadastro e código por WhatsApp só na recuperação. Sem isso, quem esquece a senha precisa ir à loja.</td></tr>
+          <tr><td>Regulamento autorizado</td><td><span class="tag">A conferir</span></td><td>Ler os itens que mudam o sistema: período, quem pode participar, apuração, prazos, limite de números, lojas.</td></tr>
+          <tr><td>Notas sem QR legível</td><td><span class="tag">Esperado</span></td><td>Digitar a chave de 44 dígitos e, se a foto estiver ruim, reenviar pelo balcão da loja.</td></tr>
+          <tr><td>Muitos acessos no mesmo horário</td><td><span class="tag ok">Controlável</span></td><td>Teste de carga no piloto e plano pago do banco durante campanhas grandes.</td></tr>
+          <tr><td>Nome do app e endereço</td><td><span class="tag">Pendente</span></td><td>“Nonatão Cupons” é um nome de trabalho. Definir também o endereço do app.</td></tr>
+          <tr><td>Entrega de prêmio e contato do ganhador</td><td><span class="tag">Pendente</span></td><td>Definir quem avisa, por qual canal e o prazo, conforme o regulamento.</td></tr>
+        </table></div>
+
+        <h3>Para começar, preciso de</h3>
+        <ul class="plain">
+          <li>O documento da autorização e o regulamento de cada campanha atual</li>
+          <li>Os CNPJs das duas lojas e a lista de lojas que participam</li>
+          <li>Cinco a dez notas fiscais reais (foto do QR code) de cada loja, para o teste da consulta</li>
+          <li>A decisão sobre recuperação de senha</li>
+          <li>Um valor padrão para a regra por valor (por exemplo, R$ 50 por número) e a lista de marcas das ações por produto</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <footer>Plano elaborado em 15/10/2026 a partir das decisões do mercado: app instalável, login por CPF e senha, consulta à SEFAZ, duas regras de números, várias campanhas e apuração ao vivo pelo sistema. Os desenhos de tela são esboços para aprovação.</footer>
+</div>
