@@ -52,6 +52,33 @@ export const paraNumero = (txt) => {
   return Number.isFinite(n) ? n : null;
 };
 
+/** Data (DD/MM/AAAA) da próxima ocorrência do dia da semana, contando hoje. */
+export function proximaData(diaSemana) {
+  const { dia, iso } = agora();
+  const [a, m, d] = iso.split('-').map(Number);
+  const delta = (diaSemana - dia + 7) % 7;
+  const dt = new Date(Date.UTC(a, m - 1, d + delta));
+  return `${String(dt.getUTCDate()).padStart(2, '0')}/${String(dt.getUTCMonth() + 1).padStart(2, '0')}/${dt.getUTCFullYear()}`;
+}
+
+/** Temas padrão dos panfletos (dia 7 = semana toda). O painel pode sobrescrever qualquer campo. */
+export const ESTILOS = [
+  { id: 'azul', nome: 'Azul Nonatão' }, { id: 'fogo', nome: 'Fogo (carnes)' }, { id: 'verde', nome: 'Verde (hortifruti)' },
+  { id: 'roxo', nome: 'Roxo' }, { id: 'vermelho', nome: 'Vermelho' }, { id: 'sol', nome: 'Sol (amarelo)' },
+];
+export const TEMAS_PADRAO = {
+  1: { titulo: 'Segunda de Ofertas', subtitulo: 'Comece a semana economizando!', estilo: 'azul' },
+  2: { titulo: 'Terça Verde', subtitulo: 'Frutas, legumes e verduras fresquinhas!', estilo: 'verde' },
+  3: { titulo: 'Quarta Especial', subtitulo: 'Ofertas para a metade da semana!', estilo: 'roxo' },
+  4: { titulo: 'Quinta da Carne', subtitulo: 'É dia de churrasco! Confira nossas ofertas especiais de carnes!', estilo: 'fogo' },
+  5: { titulo: 'Sexta Ofertão', subtitulo: 'Preparou o fim de semana? Aproveite!', estilo: 'vermelho' },
+  6: { titulo: 'Sábado de Compras', subtitulo: 'Tudo para a sua família em um só lugar!', estilo: 'sol' },
+  0: { titulo: 'Domingo em Família', subtitulo: 'Almoço de domingo com preço bom!', estilo: 'sol' },
+  7: { titulo: 'Ofertas da Semana', subtitulo: 'Valem todos os dias. Corra e aproveite!', estilo: 'azul' },
+};
+export const RODAPE_PADRAO = 'Ofertas válidas somente dia {data}. Sujeitas à disponibilidade de estoque. Imagens ilustrativas.';
+export const RODAPE_SEMANA = 'Ofertas válidas durante a semana. Sujeitas à disponibilidade de estoque. Imagens ilustrativas.';
+
 /* ---------- sessão (login do painel) ---------- */
 const SK = 'nonatao_session';
 const lerSessao = () => { try { return JSON.parse(localStorage.getItem(SK)); } catch { return null; } };
@@ -86,12 +113,12 @@ async function token() {
 }
 
 /* ---------- REST ---------- */
-async function rest(path, { method = 'GET', body, auth = false } = {}) {
+async function rest(path, { method = 'GET', body, auth = false, prefer = 'return=representation' } = {}) {
   const tk = auth ? await token() : cfg.supabaseKey;
   const res = await fetch(`${cfg.supabaseUrl}/rest/v1/${path}`, {
     method,
     // chaves novas (sb_publishable_...) não são JWT: só mandamos Authorization quando há sessão de admin
-    headers: { apikey: cfg.supabaseKey, ...(tk !== cfg.supabaseKey ? { Authorization: `Bearer ${tk}` } : {}), 'Content-Type': 'application/json', Prefer: 'return=representation' },
+    headers: { apikey: cfg.supabaseKey, ...(tk !== cfg.supabaseKey ? { Authorization: `Bearer ${tk}` } : {}), 'Content-Type': 'application/json', Prefer: prefer },
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) throw new Error((await res.text()) || `Erro ${res.status}`);
@@ -113,6 +140,7 @@ function semear() {
       { id: 'd7', nome: 'Queijo mussarela', descricao: 'Fatiado na hora', categoria: 'Frios e laticínios', preco: 39.9, preco_antigo: null, unidade: 'kg', foto_url: null, dias: [1, 4], semana_toda: false, destaque: false, ativo: true },
       { id: 'd8', nome: 'Detergente líquido', descricao: '500 ml', categoria: 'Limpeza', preco: 2.29, preco_antigo: 2.89, unidade: 'un', foto_url: null, dias: [1], semana_toda: false, destaque: false, ativo: true },
     ],
+    temas: {},
     sorteios: [
       { id: 's1', titulo: 'Sorteio de exemplo', premio: 'Uma cesta de compras', descricao: 'Cadastre os sorteios reais no painel.', imagem_url: null, como_participar: 'Cadastre o passo a passo aqui no painel. Ex.: a cada R$ 100 em compras você ganha um cupom.', regulamento_url: '', data_sorteio: mais(9), ganhador_nome: null, ganhador_foto_url: null, video_url: '', ativo: true },
       { id: 's2', titulo: 'Sorteio anterior (exemplo)', premio: 'Um vale-compras', descricao: '', imagem_url: null, como_participar: '', regulamento_url: '', data_sorteio: mais(-12), ganhador_nome: 'Nome do ganhador', ganhador_foto_url: null, video_url: '', ativo: true },
@@ -182,6 +210,26 @@ export function statusSorteio(s) {
   return 'ativo';
 }
 
+/* ---------- temas dos panfletos ---------- */
+/** Devolve { 0..7: tema } já com os padrões aplicados por baixo do que foi salvo. */
+export async function listarTemas() {
+  let salvos = [];
+  try {
+    if (DEMO) salvos = Object.entries(demo().temas || {}).map(([dia, t]) => ({ dia: Number(dia), ...t }));
+    else if (!SEM_BANCO) salvos = await rest('panfleto_dias?select=*');
+  } catch { /* tabela ainda não criada: usa os padrões */ }
+  const out = {};
+  for (const d of Object.keys(TEMAS_PADRAO)) out[d] = { dia: Number(d), ...TEMAS_PADRAO[d] };
+  for (const t of salvos) out[t.dia] = { ...out[t.dia], ...Object.fromEntries(Object.entries(t).filter(([, v]) => v !== null && v !== '')) };
+  return out;
+}
+const camposTema = ['dia', 'titulo', 'subtitulo', 'estilo', 'cor_a', 'cor_b', 'fundo_url', 'titulo_arte_url', 'rodape'];
+export async function salvarTema(t) {
+  const dados = limpar(t, camposTema);
+  if (DEMO) { const d = demo(); d.temas = d.temas || {}; d.temas[t.dia] = dados; demoSalvar(d); return; }
+  await rest('panfleto_dias?on_conflict=dia', { method: 'POST', body: dados, auth: true, prefer: 'resolution=merge-duplicates,return=minimal' });
+}
+
 /* ---------- administração ---------- */
 export async function ehAdmin() {
   if (SEM_BANCO) return false;
@@ -205,6 +253,17 @@ export function reduzirImagem(file, max = 1000) {
   });
 }
 const blobParaDataUrl = (b) => new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(b); });
+
+/** Envia um Blob já pronto (ex.: foto sem fundo) e devolve a URL pública. */
+export async function enviarBlob(blob, pasta = 'produtos') {
+  if (DEMO) return blobParaDataUrl(blob);
+  const caminho = `${pasta}/${uid()}.webp`;
+  const r = await fetch(`${cfg.supabaseUrl}/storage/v1/object/imagens/${caminho}`, {
+    method: 'POST', headers: { apikey: cfg.supabaseKey, Authorization: `Bearer ${await token()}`, 'Content-Type': 'image/webp', 'x-upsert': 'true' }, body: blob,
+  });
+  if (!r.ok) throw new Error('Não foi possível enviar a foto: ' + (await r.text()));
+  return `${cfg.supabaseUrl}/storage/v1/object/public/imagens/${caminho}`;
+}
 
 /** Envia a foto e devolve a URL pública. */
 export async function enviarImagem(file, pasta = 'produtos') {

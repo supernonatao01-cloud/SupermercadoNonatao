@@ -2,13 +2,15 @@ import {
   DEMO, SEM_BANCO, DIAS, CATEGORIAS, UNIDADES, brl, esc, emojiDe, paraNumero,
   login, logout, sessaoAtual, ehAdmin, demoRestaurar,
   listarProdutos, salvarProduto, removerProduto, listarSorteios, salvarSorteio, removerSorteio, enviarImagem, statusSorteio,
+  listarTemas, salvarTema, ESTILOS, TEMAS_PADRAO, reduzirImagem, enviarBlob,
 } from './api.js';
+import { tirarFundoLiso, tirarFundoIA } from './imagem.js';
 
 const app = document.getElementById('app');
 const $ = (s, c = document) => c.querySelector(s);
 const ic = (id) => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#${id}"/></svg>`;
 
-const S = { aba: 'promos', produtos: [], sorteios: [], filtro: 'todos' };
+const S = { aba: 'promos', produtos: [], sorteios: [], temas: {}, filtro: 'todos' };
 
 function toast(msg, erro = false) {
   const t = document.createElement('div'); t.className = 'toast' + (erro ? ' toast--err' : ''); t.textContent = msg; t.setAttribute('role', 'status');
@@ -53,6 +55,7 @@ async function iniciar() {
       <div class="ad-tabs" role="tablist">
         <button class="chip-btn" role="tab" data-aba="promos">🏷️ Promoções</button>
         <button class="chip-btn" role="tab" data-aba="sorteios">🎁 Sorteios</button>
+        <button class="chip-btn" role="tab" data-aba="temas">🎨 Temas</button>
       </div>
       <div id="corpo"></div>
     </div>
@@ -66,7 +69,7 @@ async function iniciar() {
 }
 async function carregar() {
   try {
-    [S.produtos, S.sorteios] = await Promise.all([listarProdutos({ admin: true }), listarSorteios({ admin: true })]);
+    [S.produtos, S.sorteios, S.temas] = await Promise.all([listarProdutos({ admin: true }), listarSorteios({ admin: true }), listarTemas()]);
   } catch (e) {
     if (/expirada|JWT/i.test(e.message)) { logout(); telaLogin('Sua sessão expirou. Entre novamente.'); return; }
     toast('Erro ao carregar: ' + e.message, true);
@@ -75,8 +78,9 @@ async function carregar() {
 }
 function desenhar() {
   app.querySelectorAll('[data-aba]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.aba === S.aba)));
+  $('#novo').hidden = S.aba === 'temas';
   $('#novo-t').textContent = S.aba === 'promos' ? 'Nova promoção' : 'Novo sorteio';
-  S.aba === 'promos' ? desenharPromos() : desenharSorteios();
+  if (S.aba === 'promos') desenharPromos(); else if (S.aba === 'sorteios') desenharSorteios(); else desenharTemas();
 }
 
 /* ============ PROMOÇÕES ============ */
@@ -124,7 +128,11 @@ function editorProduto(p = null) {
       <div class="foto">
         <div class="foto__p" id="prev">${v.foto_url ? `<img src="${esc(v.foto_url)}" alt="">` : emojiDe(v.categoria)}</div>
         <div><label class="btn btn--blue"><input type="file" accept="image/*" id="arq">${ic('i-search')} ${v.foto_url ? 'Trocar foto' : 'Tirar ou escolher foto'}</label>
-          <small style="color:var(--muted);display:block;margin-top:6px">A foto é reduzida automaticamente.</small></div>
+          <small style="color:var(--muted);display:block;margin-top:6px">A foto é reduzida automaticamente.</small>
+          <div class="chips" id="bgbtns" style="margin-top:8px" ${v.foto_url ? '' : 'hidden'}>
+            <button type="button" class="chip-btn" id="bg-liso" title="Apaga o fundo branco ou de uma cor só">✂ Tirar fundo liso</button>
+            <button type="button" class="chip-btn" id="bg-ia" title="Recorta o produto com inteligência artificial (baixa ~30 MB na 1ª vez)">✨ Remover fundo (IA)</button>
+          </div></div>
       </div>
       <label class="field"><span>Nome do produto</span><input name="nome" value="${esc(v.nome)}" placeholder="Ex.: Arroz tipo 1 – 5 kg" required maxlength="80"></label>
       <div><span class="lbl">Categoria</span><div class="chips" id="cats" style="margin-top:6px">${CATEGORIAS.map((c) => `<button type="button" class="chip-btn" data-cat="${esc(c.nome)}" aria-pressed="${v.categoria === c.nome}">${c.emoji} ${c.nome}</button>`).join('')}</div></div>
@@ -164,12 +172,36 @@ function editorProduto(p = null) {
     const n = Number(b.dataset.dia); const i = v.dias.indexOf(n);
     i >= 0 ? v.dias.splice(i, 1) : v.dias.push(n); b.setAttribute('aria-pressed', String(i < 0));
   });
+  // foto atual como Blob (para poder tirar o fundo); se já existe foto salva, baixa só quando precisar
+  let blobAtual = null;
+  const obterBlob = async () => {
+    if (blobAtual) return blobAtual;
+    if (!foto) throw new Error('Envie uma foto primeiro.');
+    blobAtual = await (await fetch(foto)).blob();
+    return blobAtual;
+  };
+  const mostrar = (url) => { $('#prev', dlg).innerHTML = `<img src="${esc(url)}" alt="" style="background:repeating-conic-gradient(#e3e9fb 0 25%,#fff 0 50%) 0 0/16px 16px">`; };
+  const enviar = async (blob, rotulo) => {
+    $('#prev', dlg).innerHTML = `<span style="font-size:.8rem;font-weight:700">${rotulo}</span>`;
+    foto = await enviarBlob(blob, 'produtos'); blobAtual = blob; mostrar(foto); $('#bgbtns', dlg).hidden = false;
+  };
   $('#arq', dlg).addEventListener('change', async (e) => {
     const file = e.target.files[0]; if (!file) return;
-    $('#prev', dlg).innerHTML = '<span style="font-size:.8rem;font-weight:700">Enviando…</span>';
-    try { foto = await enviarImagem(file, 'produtos'); $('#prev', dlg).innerHTML = `<img src="${esc(foto)}" alt="">`; }
-    catch (err) { foto = v.foto_url || ''; $('#prev', dlg).textContent = emojiDe(v.categoria); toast(err.message, true); }
+    try { await enviar(await reduzirImagem(file, 900), 'Enviando…'); }
+    catch (err) { foto = v.foto_url || ''; $('#prev', dlg).innerHTML = foto ? `<img src="${esc(foto)}" alt="">` : emojiDe(v.categoria); toast(err.message, true); }
   });
+  const tratar = (id, fn, rotulo) => $(id, dlg).addEventListener('click', async (e) => {
+    const btn = e.currentTarget, txt = btn.textContent; btn.disabled = true;
+    try {
+      const original = await obterBlob();
+      btn.textContent = rotulo;
+      const pronto = await fn(original, (k, a, t) => { if (t) btn.textContent = `${rotulo} ${Math.round((a / t) * 100)}%`; });
+      await enviar(pronto, 'Enviando…'); toast('Fundo removido!');
+    } catch (err) { toast(String(err.message || err).slice(0, 160), true); if (foto) mostrar(foto); }
+    btn.disabled = false; btn.textContent = txt;
+  });
+  tratar('#bg-liso', (b) => tirarFundoLiso(b), 'Tirando…');
+  tratar('#bg-ia', (b, p) => tirarFundoIA(b, p), 'Recortando…');
   $('[data-fechar]', dlg).onclick = () => dlg.close();
 
   const coletar = () => {
@@ -294,6 +326,80 @@ function editorSorteio(s = null) {
   if (del) del.onclick = async () => {
     if (!confirm(`Apagar o sorteio “${s.titulo}”? Isso não pode ser desfeito.`)) return;
     if (await pedir(() => removerSorteio(s.id), 'Sorteio apagado')) { dlg.close(); carregar(); }
+  };
+}
+
+/* ============ TEMAS DOS PANFLETOS ============ */
+const ORDEM_TEMAS = [1, 2, 3, 4, 5, 6, 0, 7];
+const nomeTema = (d) => (d === 7 ? 'Semana toda' : DIAS.find((x) => x.n === d).l);
+function desenharTemas() {
+  $('#corpo').innerHTML = `<p class="hint" style="margin-bottom:14px">Aqui você escolhe o <b>título, o subtítulo e o visual</b> do panfleto de cada dia (ex.: “Quinta da Carne”).</p>
+    <div class="ad-list">${ORDEM_TEMAS.map((d) => { const t = S.temas[d];
+      return `<div class="row" data-dia="${d}"><div class="row__img">${t.fundo_url ? `<img src="${esc(t.fundo_url)}" alt="">` : '🎨'}</div>
+        <div class="row__t"><b>${esc(t.titulo)}</b><span>${esc(nomeTema(d))}${t.subtitulo ? ' · ' + esc(t.subtitulo) : ''}</span>
+          <div class="tags"><span class="tag">${esc((ESTILOS.find((e) => e.id === t.estilo) || ESTILOS[0]).nome)}</span>${t.fundo_url ? '<span class="tag tag--g">Fundo próprio</span>' : ''}${t.titulo_arte_url ? '<span class="tag tag--g">Arte do título</span>' : ''}</div></div>
+        <div class="row__a"><button class="ibtn" data-edit aria-label="Editar tema de ${esc(nomeTema(d))}">✎</button></div></div>`; }).join('')}</div>`;
+  $('#corpo').querySelectorAll('.row').forEach((r) => { r.querySelector('[data-edit]').onclick = () => editorTema(Number(r.dataset.dia)); });
+}
+
+function editorTema(dia) {
+  const v = { ...S.temas[dia] };
+  const dlg = $('#ed');
+  const corA = /^#[0-9a-f]{6}$/i.test(v.cor_a || '') ? v.cor_a : '#1f5be0', corB = /^#[0-9a-f]{6}$/i.test(v.cor_b || '') ? v.cor_b : '#041c63';
+  dlg.innerHTML = `
+    <div class="ed__h"><h2>Tema: ${esc(nomeTema(dia))}</h2><button class="ibtn" type="button" data-fechar aria-label="Fechar">×</button></div>
+    <form class="ed__b" id="f-t" novalidate>
+      <label class="field"><span>Título do panfleto</span><input name="titulo" value="${esc(v.titulo)}" maxlength="40" placeholder="Ex.: Quinta da Carne" required><small>A última palavra aparece bem grande.</small></label>
+      <label class="field"><span>Subtítulo</span><input name="subtitulo" value="${esc(v.subtitulo || '')}" maxlength="110" placeholder="Ex.: É dia de churrasco! Confira nossas ofertas!"></label>
+      <div><span class="lbl">Visual</span><div class="chips" id="estilos" style="margin-top:6px">${ESTILOS.map((e) => `<button type="button" class="chip-btn" data-est="${e.id}" aria-pressed="${v.estilo === e.id}">${e.nome}</button>`).join('')}</div></div>
+      <div class="two">
+        <label class="field"><span>Cor 1 <small>(opcional)</small></span><input name="cor_a" type="color" value="${corA}" style="padding:4px"></label>
+        <label class="field"><span>Cor 2 <small>(opcional)</small></span><input name="cor_b" type="color" value="${corB}" style="padding:4px"></label>
+      </div>
+      <label class="toggle-row"><span>Usar minhas cores<small>Desligado: usa as cores do visual escolhido</small></span><span class="sw"><input type="checkbox" name="usar_cores" ${v.cor_a || v.cor_b ? 'checked' : ''}><i></i></span></label>
+      <hr class="sep">
+      <div class="foto"><div class="foto__p" id="prev-f">${v.fundo_url ? `<img src="${esc(v.fundo_url)}" alt="">` : '🖼️'}</div>
+        <div><label class="btn btn--outline"><input type="file" accept="image/*" id="arq-f">Imagem de fundo</label>
+        ${v.fundo_url ? '<button type="button" class="btn btn--outline" id="rm-f" style="margin-top:8px;color:#b30f24">Tirar fundo próprio</button>' : ''}</div></div>
+      <div class="foto"><div class="foto__p" id="prev-a">${v.titulo_arte_url ? `<img src="${esc(v.titulo_arte_url)}" alt="">` : '🔤'}</div>
+        <div><label class="btn btn--outline"><input type="file" accept="image/*" id="arq-a">Arte do título (PNG)</label>
+        ${v.titulo_arte_url ? '<button type="button" class="btn btn--outline" id="rm-a" style="margin-top:8px;color:#b30f24">Tirar arte do título</button>' : ''}</div></div>
+      <label class="field"><span>Rodapé</span><textarea name="rodape" placeholder="Ofertas válidas somente dia {data}. Sujeitas à disponibilidade de estoque. Imagens ilustrativas.">${esc(v.rodape || '')}</textarea><small>Use <b>{data}</b> onde a data de validade deve aparecer. Em branco, usa o texto padrão.</small></label>
+      <div class="erro" id="e-t" hidden></div>
+    </form>
+    <div class="ed__f"><button class="btn btn--outline" type="button" id="padrao" style="flex:0 0 auto">Restaurar padrão</button><button class="btn btn--whats" type="button" id="salvar">Salvar tema</button></div>`;
+  dlg.showModal();
+  const f = $('#f-t', dlg), erro = $('#e-t', dlg);
+  let fundo = v.fundo_url || '', arte = v.titulo_arte_url || '';
+  $('#estilos', dlg).addEventListener('click', (e) => {
+    const b = e.target.closest('[data-est]'); if (!b) return;
+    dlg.querySelectorAll('#estilos .chip-btn').forEach((x) => x.setAttribute('aria-pressed', 'false')); b.setAttribute('aria-pressed', 'true'); v.estilo = b.dataset.est;
+  });
+  const subir = (inp, prev, pasta, setar, vazio) => $(inp, dlg).addEventListener('change', async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    $(prev, dlg).innerHTML = '<span style="font-size:.8rem;font-weight:700">Enviando…</span>';
+    try { const url = await enviarImagem(file, pasta); setar(url); $(prev, dlg).innerHTML = `<img src="${esc(url)}" alt="">`; }
+    catch (err) { $(prev, dlg).textContent = vazio; toast(err.message, true); }
+  });
+  subir('#arq-f', '#prev-f', 'temas', (u) => { fundo = u; }, '🖼️');
+  subir('#arq-a', '#prev-a', 'temas', (u) => { arte = u; }, '🔤');
+  const rf = $('#rm-f', dlg); if (rf) rf.onclick = () => { fundo = ''; $('#prev-f', dlg).textContent = '🖼️'; };
+  const ra = $('#rm-a', dlg); if (ra) ra.onclick = () => { arte = ''; $('#prev-a', dlg).textContent = '🔤'; };
+  $('[data-fechar]', dlg).onclick = () => dlg.close();
+  $('#padrao', dlg).onclick = async (e) => {
+    if (!confirm('Voltar este dia para o tema padrão?')) return;
+    e.currentTarget.disabled = true;
+    const p = TEMAS_PADRAO[dia];
+    if (await pedir(() => salvarTema({ dia, titulo: p.titulo, subtitulo: p.subtitulo, estilo: p.estilo, cor_a: null, cor_b: null, fundo_url: null, titulo_arte_url: null, rodape: null }), 'Tema restaurado')) { dlg.close(); carregar(); } else e.currentTarget.disabled = false;
+  };
+  $('#salvar', dlg).onclick = async (e) => {
+    const d = Object.fromEntries(new FormData(f));
+    if (!d.titulo.trim()) { erro.textContent = 'Digite o título do panfleto.'; erro.hidden = false; return; }
+    const usar = f.elements.usar_cores.checked;
+    e.currentTarget.disabled = true;
+    const ok = await pedir(() => salvarTema({ dia, titulo: d.titulo.trim(), subtitulo: d.subtitulo.trim() || null, estilo: v.estilo || 'azul',
+      cor_a: usar ? d.cor_a : null, cor_b: usar ? d.cor_b : null, fundo_url: fundo || null, titulo_arte_url: arte || null, rodape: d.rodape.trim() || null }), 'Tema salvo!');
+    if (ok) { dlg.close(); carregar(); } else e.currentTarget.disabled = false;
   };
 }
 

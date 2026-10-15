@@ -36,10 +36,16 @@ Na internet (sem Supabase configurado) as páginas aparecem vazias — nunca com
    **Nunca** use a chave `service_role` aqui.
 6. Faça commit e push: a Vercel publica sozinha. Acesse `/admin` e entre com o e-mail e a senha.
 
+## Temas do panfleto (migração 2)
+
+Para o painel poder editar o título e o visual de cada dia ("Quinta da Carne"), rode também
+`supabase/migracao_panfleto.sql` no SQL Editor. Antes disso o site já usa os temas padrão.
+
 ## Como a equipe usa o painel (`/admin`)
 
 - **Promoções**: toque em **+ Nova promoção** → foto, nome, preço, categoria, **dias** (Seg a Dom ou *semana toda*) → Salvar.
   O interruptor verde mostra ou esconde a oferta no site sem apagar.
+- **Temas**: título, subtítulo, visual (cores, fundo e arte do título) e rodapé de cada dia da semana.
 - **Sorteios**: **+ Novo sorteio** → arte, prêmio, data/hora (contagem regressiva automática), como participar, regulamento.
   Depois do sorteio, preencha o **ganhador** (nome, foto, vídeo): ele passa sozinho para *Já sorteados*.
 
