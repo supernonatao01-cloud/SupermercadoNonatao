@@ -24,7 +24,7 @@ function cardAtivo(s, i) {
     ? `<div class="contagem" data-fim="${esc(s.data_sorteio)}" role="timer" aria-label="Tempo até o sorteio">
          <div><b data-u="d">00</b><span>dias</span></div><div><b data-u="h">00</b><span>horas</span></div><div><b data-u="m">00</b><span>min</span></div><div><b data-u="s">00</b><span>seg</span></div>
        </div>` : '';
-  const quando = s.data_sorteio ? `<p class="data-sorteio">${st === 'apuracao' ? 'Sorteio realizado em' : 'Sorteio em'} <b>${esc(dataBR(s.data_sorteio))}</b></p>` : '';
+  const quando = s.data_sorteio ? `<p class="data-sorteio">${st === 'apuracao' ? 'Sorteio realizado em' : 'Sorteio em'} <b>${esc(dataBR(s.data_sorteio))}</b></p>` : (st === 'ativo' ? '<p class="data-sorteio">Data do sorteio: <b>a definir</b></p>' : '');
   const como = s.como_participar ? `<details class="como"><summary>Como participar</summary><p>${esc(s.como_participar)}</p></details>` : '';
   return `<article class="sorteio" style="--i:${i}">
     <div class="sorteio__arte">${arte(s)}<span class="status ${st === 'apuracao' ? 'status--apuracao' : ''}">${st === 'apuracao' ? 'Apurando resultado' : 'Rolando agora'}</span></div>
