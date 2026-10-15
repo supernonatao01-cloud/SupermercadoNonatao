@@ -1,5 +1,6 @@
 import {
-  DEMO, DIAS, CATEGORIAS, RODAPE_PADRAO, RODAPE_SEMANA, agora, brl, desconto, esc, emojiDe, proximaData, listarProdutos, listarTemas,
+  DEMO, DIAS, CATEGORIAS, TEMAS_PADRAO, RODAPE_PADRAO, RODAPE_SEMANA, agora, brl, desconto, esc, emojiDe, layoutDe, textoValidade,
+  listarProdutos, listarPanfletos, panfletoVigente,
 } from './api.js';
 import { montarShell } from './shell.js';
 
@@ -14,15 +15,34 @@ const gravarFav = (s) => { try { localStorage.setItem(FAV, JSON.stringify([...s]
 
 const pedido = new URLSearchParams(location.search).get('dia');
 const abaInicial = pedido === 'semana' ? 'semana' : (pedido !== null && /^[0-6]$/.test(pedido) ? pedido : String(hoje));
-const estado = { produtos: [], temas: {}, aba: abaInicial, cat: 'Todas', q: '', fav: lerFav(), vista: 'panfleto' };
+const estado = { produtos: [], panfletos: [], aba: abaInicial, cat: 'Todas', q: '', fav: lerFav(), vista: 'panfleto' };
 
 const diaDaAba = () => (estado.aba === 'semana' ? 7 : Number(estado.aba));
 const nomeDia = () => (estado.aba === 'semana' ? 'Semana toda' : DIAS.find((d) => String(d.n) === estado.aba).l);
 const unidadeRotulo = (u) => (!u || u === 'un' ? 'und' : u);
-const doDia = () => estado.produtos.filter((p) => {
+const panfletoDe = (p) => estado.panfletos.find((x) => x.id === p.panfleto_id);
+
+/** Este panfleto aparece na aba atual? */
+const pfNaAba = (pf) => panfletoVigente(pf) && (estado.aba === 'semana' ? pf.semana_toda : (pf.semana_toda || (pf.dias || []).includes(Number(estado.aba))));
+/** Produto avulso (sem panfleto) aparece na aba atual? */
+const avulsoNaAba = (p) => {
   const dias = p.dias || [];
   return estado.aba === 'semana' ? p.semana_toda : (p.semana_toda || dias.includes(Number(estado.aba)));
+};
+/** Todos os produtos da aba atual (para a visão em lista). */
+const doDia = () => estado.produtos.filter((p) => {
+  if (!p.panfleto_id) return avulsoNaAba(p);
+  const pf = panfletoDe(p);
+  return pf && pfNaAba(pf);
 });
+/** Encartes da aba atual: primeiro os panfletos (por ordem), depois um encarte com os produtos avulsos do dia. */
+function encartesDaAba() {
+  const d = diaDaAba();
+  const lista = estado.panfletos.filter(pfNaAba).map((pf) => ({ id: pf.id, tema: pf, produtos: estado.produtos.filter((p) => p.panfleto_id === pf.id) }));
+  const avulsos = estado.produtos.filter((p) => !p.panfleto_id && avulsoNaAba(p));
+  if (avulsos.length) lista.push({ id: 'avulso', tema: { ...TEMAS_PADRAO[d], dia: d }, produtos: avulsos });
+  return lista;
+}
 
 /* ---------- abas de dias ---------- */
 const tabs = $('#tabs');
@@ -51,7 +71,7 @@ document.querySelector('.viewswitch').addEventListener('click', (e) => {
 
 /* ============ ENCARTE ============ */
 const HEX = /^#[0-9a-f]{6}$/i;
-function precoBadge(p, i) {
+function precoBadge(p) {
   const [r, c] = Number(p.preco).toFixed(2).split('.');
   const off = p.preco_antigo && Number(p.preco_antigo) > Number(p.preco);
   return `<div class="badge-preco" aria-hidden="true">
@@ -65,14 +85,16 @@ function pcard(p, i, grande) {
   const img = p.foto_url ? `<img src="${esc(p.foto_url)}" alt="" crossorigin="anonymous" ${i > 3 ? 'loading="lazy"' : ''}>` : `<div class="ph" aria-hidden="true">${emojiDe(p.categoria)}</div>`;
   const rotulo = `${p.nome}, ${brl(p.preco)}${p.unidade && p.unidade !== 'un' ? ' o ' + p.unidade : ''}`;
   return `<button type="button" class="pcard${grande ? ' pcard--big' : ''}" data-id="${esc(p.id)}" style="--i:${Math.min(i, 12)}" aria-label="${esc(rotulo)}. Ver detalhes">
-    <div class="pcard__img">${img}${off ? `<span class="pcard__off">-${off}%</span>` : ''}${precoBadge(p, i)}</div>
+    <div class="pcard__img">${img}${off ? `<span class="pcard__off">-${off}%</span>` : ''}</div>
+    ${precoBadge(p)}
     <div class="pcard__nome"><span>${esc(p.nome)}${p.descricao ? `<small>${esc(p.descricao)}</small>` : ''}</span></div>
   </button>`;
 }
-function flyerHTML() {
+function flyerHTML(enc) {
+  const { tema, produtos } = enc;
   const d = diaDaAba();
-  const tema = estado.temas[d] || { titulo: nomeDia(), estilo: 'azul' };
-  const lista = doDia();
+  const estilo = tema.estilo || 'azul';
+  const layout = layoutDe(estilo);
   const estilos = [];
   if (HEX.test(tema.cor_a || '')) estilos.push(`--a:${tema.cor_a}`);
   if (HEX.test(tema.cor_b || '')) estilos.push(`--b:${tema.cor_b}`);
@@ -82,23 +104,33 @@ function flyerHTML() {
   const titulo = tema.titulo_arte_url
     ? `<img class="flyer__arte" src="${esc(tema.titulo_arte_url)}" alt="${esc(tema.titulo)}" crossorigin="anonymous">`
     : `<h2>${palavras.length ? `<span class="t-pre">${esc(palavras.join(' '))}</span>` : ''}<span class="t-main" style="--n:${Math.max(5, principal.length)}">${esc(principal)}</span></h2>`;
-  const rodape = (tema.rodape || (estado.aba === 'semana' ? RODAPE_SEMANA : RODAPE_PADRAO)).replace('{data}', estado.aba === 'semana' ? '' : proximaData(d));
+  const modelo = tema.rodape || (estado.aba === 'semana' && !tema.valido_ate ? RODAPE_SEMANA : RODAPE_PADRAO);
+  const rodape = modelo.replace('{data}', textoValidade(tema, estado.aba === 'semana' ? null : d));
 
-  const corpo = lista.length
-    ? `<div class="pgrid">${lista.map((p, i) => pcard(p, i, i === 0 && p.destaque && lista.length >= 3)).join('')}</div>`
+  const ordem = [...produtos].sort((a, b) => Number(b.destaque) - Number(a.destaque));
+  const cartoes = ordem.map((p, i) => pcard(p, i, i === 0 && p.destaque && layout !== 'compacto' && ordem.length >= 3)).join('');
+  const grade = layout === 'flutuante' ? `<div class="pgrid">${cartoes}</div>` : `<div class="painel"><div class="pgrid">${cartoes}</div></div>`;
+  const corpo = produtos.length ? grade
     : `<div class="flyer__vazio"><div class="big">🛒</div><h3>As ofertas deste dia estão chegando</h3><p>Volte mais tarde ou entre no clube de ofertas para receber as novidades no WhatsApp.</p>
          <a class="btn btn--whats no-export" target="_blank" rel="noopener" href="https://chat.whatsapp.com/Lcsv8LEJewk5SvZZ7n6JXw?s=cl&p=i&mlu=0&ilr=4">Entrar no clube de ofertas</a></div>`;
 
-  return `<article class="flyer st-${esc(tema.estilo || 'azul')}${tema.fundo_url ? ' has-bg' : ''}" style="${estilos.join(';')}" aria-label="Panfleto: ${esc(tema.titulo)}">
+  return `<article class="flyer st-${esc(estilo)} lay-${layout}${tema.fundo_url ? ' has-bg' : ''}" style="${estilos.join(';')}" aria-label="Panfleto: ${esc(tema.titulo)}">
     <div class="flyer__top"><img class="flyer__logo" src="assets/logo-branco.png" alt="Nonatão Supermercados" width="56" height="52"><span class="flyer__tag">${esc(nomeDia())}</span></div>
     <header class="flyer__head">${titulo}${tema.subtitulo ? `<p class="flyer__sub">${esc(tema.subtitulo)}</p>` : ''}</header>
     ${corpo}
     <footer class="flyer__foot">
       <span class="cal" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2zM5 9h14v11H5zm2 2v2h2v-2zm4 0v2h2v-2zm4 0v2h2v-2z"/></svg></span>
       <p>${esc(rodape)}</p>
-      <img src="assets/logo-branco.png" alt="" width="50" height="46">
+      <img src="${estilo === 'pescado' ? 'assets/logo.png' : 'assets/logo-branco.png'}" alt="" width="50" height="46">
     </footer>
   </article>`;
+}
+function encarteComAcoes(enc) {
+  return `<section class="flyer-wrap" data-fid="${esc(enc.id)}">${flyerHTML(enc)}
+    <div class="flyer-actions">
+      <button class="btn btn--yellow" type="button" data-act="baixar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#i-share"/></svg>Baixar panfleto (imagem)</button>
+      <button class="btn btn--whats" type="button" data-act="zap"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#i-whats"/></svg>Enviar no WhatsApp</button>
+    </div></section>`;
 }
 
 /* ---------- detalhe do produto ---------- */
@@ -151,19 +183,19 @@ function toast(msg, erro = false) {
   const t = document.createElement('div'); t.className = 'toast' + (erro ? ' toast--err' : ''); t.textContent = msg; t.setAttribute('role', 'status');
   document.body.append(t); setTimeout(() => t.remove(), 3500);
 }
-async function gerarImagem() {
+async function gerarImagem(node) {
   await carregarLib();
-  const node = $('#flyer-host .flyer');
   const opts = { pixelRatio: 2, cacheBust: true, backgroundColor: '#041c63', filter: (n) => !(n.classList && n.classList.contains('no-export')) };
   try { await window.htmlToImage.toPng(node, opts); } catch { /* aquecimento (Safari) */ }
   const url = await window.htmlToImage.toPng(node, opts);
   return (await fetch(url)).blob();
 }
-$('#baixar').addEventListener('click', async (e) => {
-  const btn = e.currentTarget, texto = btn.innerHTML; btn.disabled = true; btn.textContent = 'Gerando imagem…';
+async function baixar(wrap, btn) {
+  const texto = btn.innerHTML; btn.disabled = true; btn.textContent = 'Gerando imagem…';
   try {
-    const blob = await gerarImagem();
-    const nome = `panfleto-nonatao-${nomeDia().toLowerCase().replace(/[^a-z0-9]+/gi, '-')}.png`;
+    const blob = await gerarImagem(wrap.querySelector('.flyer'));
+    const titulo = wrap.querySelector('.flyer').getAttribute('aria-label').replace('Panfleto: ', '');
+    const nome = `panfleto-nonatao-${titulo.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-')}.png`;
     const file = new File([blob], nome, { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [file] }) && matchMedia('(pointer: coarse)').matches) {
       await navigator.share({ files: [file], text: 'Ofertas do Nonatão Supermercados' }).catch(() => {});
@@ -173,14 +205,18 @@ $('#baixar').addEventListener('click', async (e) => {
     }
   } catch { toast('Não foi possível gerar a imagem agora. Tente de novo.', true); }
   btn.disabled = false; btn.innerHTML = texto;
+}
+$('#flyer-host').addEventListener('click', (e) => {
+  const c = e.target.closest('.pcard'); if (c) { abrirDetalhe(c.dataset.id); return; }
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const wrap = b.closest('.flyer-wrap');
+  if (b.dataset.act === 'baixar') baixar(wrap, b);
+  if (b.dataset.act === 'zap') {
+    const titulo = wrap.querySelector('.flyer').getAttribute('aria-label').replace('Panfleto: ', '');
+    const texto = `🛒 ${titulo} no Nonatão Supermercados!\nConfira o panfleto: ${location.origin}/panfleto?dia=${estado.aba}`;
+    open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
+  }
 });
-$('#zap').addEventListener('click', () => {
-  const t = estado.temas[diaDaAba()];
-  const texto = `🛒 ${t ? t.titulo : 'Ofertas'} no Nonatão Supermercados!\nConfira o panfleto: ${location.origin}/panfleto?dia=${estado.aba}`;
-  open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
-});
-
-$('#flyer-host').addEventListener('click', (e) => { const c = e.target.closest('.pcard'); if (c) abrirDetalhe(c.dataset.id); });
 
 /* ============ LISTA ============ */
 $('#busca').addEventListener('input', (e) => { estado.q = e.target.value.trim().toLowerCase(); render(); });
@@ -201,7 +237,7 @@ function preco(v) {
 }
 function card(p, i) {
   const off = desconto(p);
-  const foto = p.foto_url ? `<img src="${esc(p.foto_url)}" alt="${esc(p.nome)}" loading="lazy" width="440" height="380">` : `<div class="ph" aria-hidden="true">${emojiDe(p.categoria)}</div>`;
+  const foto = p.foto_url ? `<img src="${esc(p.foto_url)}" alt="${esc(p.nome)}" loading="lazy" width="440" height="380" style="object-fit:contain">` : `<div class="ph" aria-hidden="true">${emojiDe(p.categoria)}</div>`;
   const un = p.unidade && p.unidade !== 'un' ? `/${esc(p.unidade)}` : '';
   const fav = estado.fav.has(p.id);
   return `<article class="oferta" style="--i:${Math.min(i, 14)}" data-id="${esc(p.id)}">
@@ -239,8 +275,13 @@ $('#grid').addEventListener('click', (e) => {
 
 /* ---------- render geral ---------- */
 function render() {
-  if (estado.vista === 'panfleto') $('#flyer-host').innerHTML = flyerHTML();
-  else renderLista();
+  if (estado.vista === 'lista') { renderLista(); return; }
+  const encartes = encartesDaAba();
+  $('#flyer-host').innerHTML = encartes.length
+    ? encartes.map(encarteComAcoes).join('')
+    : `<div class="flyer-wrap"><article class="flyer st-azul lay-flutuante"><div class="flyer__top"><img class="flyer__logo" src="assets/logo-branco.png" alt="Nonatão Supermercados" width="56" height="52"><span class="flyer__tag">${esc(nomeDia())}</span></div>
+        <div class="flyer__vazio"><div class="big">🛒</div><h3>As ofertas deste dia estão chegando</h3><p>Volte mais tarde ou entre no clube de ofertas para receber as novidades no WhatsApp.</p>
+        <a class="btn btn--whats" target="_blank" rel="noopener" href="https://chat.whatsapp.com/Lcsv8LEJewk5SvZZ7n6JXw?s=cl&p=i&mlu=0&ilr=4">Entrar no clube de ofertas</a></div></article></div>`;
 }
 
 /* deslizar para trocar de dia (celular) */
@@ -259,8 +300,8 @@ alvoSwipe.addEventListener('touchend', (e) => {
 /* ---------- carregar ---------- */
 $('#flyer-host').innerHTML = '<div class="skel" style="width:min(100%,820px);height:520px"></div>';
 marcarAba();
-Promise.all([listarProdutos(), listarTemas()]).then(([lista, temas]) => {
-  estado.produtos = lista; estado.temas = temas; montarCats(); render();
+Promise.all([listarProdutos(), listarPanfletos()]).then(([lista, pfs]) => {
+  estado.produtos = lista; estado.panfletos = pfs; montarCats(); render();
 }).catch(() => {
   $('#flyer-host').innerHTML = '<div class="vazio" style="width:100%"><div class="big">📡</div><h3>Não foi possível carregar o panfleto</h3><p>Verifique sua internet e tente de novo.</p><button class="btn btn--blue" onclick="location.reload()">Tentar novamente</button></div>';
 });

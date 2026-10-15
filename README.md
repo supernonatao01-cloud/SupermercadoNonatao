@@ -36,16 +36,27 @@ Na internet (sem Supabase configurado) as páginas aparecem vazias — nunca com
    **Nunca** use a chave `service_role` aqui.
 6. Faça commit e push: a Vercel publica sozinha. Acesse `/admin` e entre com o e-mail e a senha.
 
-## Temas do panfleto (migração 2)
+## Panfletos independentes (migração 3)
 
-Para o painel poder editar o título e o visual de cada dia ("Quinta da Carne"), rode também
-`supabase/migracao_panfleto.sql` no SQL Editor. Antes disso o site já usa os temas padrão.
+Cada **panfleto** é um encarte com logo 3D, visual, dias e validade próprios (ex.: *Quinta da Carne*, *Quarta e Quinta Verde*,
+*Super Sexta do Pescado*, *Outubro Rosa*). Os produtos entram no panfleto escolhido e vários panfletos podem aparecer no mesmo dia.
+
+1. Rode `supabase/migracao_panfletos.sql` no SQL Editor (cria a tabela `panfletos` e a coluna `produtos.panfleto_id`).
+2. Para ver os 4 panfletos de exemplo com os produtos recortados de `imgspanfletos/`:
+   ```bash
+   python tools/recortar_panfletos.py   # recorta produtos e logos (precisa de: pip install rembg pillow)
+   python tools/enviar_cortes.py        # envia os recortes para o Storage
+   python tools/dados_panfletos.py      # cadastra os panfletos e produtos (--apagar remove os exemplos)
+   ```
+   Antes da migração o site continua funcionando com os produtos avulsos de cada dia.
+
+Visuais disponíveis: azul, fogo, roxo, vermelho, sol (produtos flutuando com selo redondo), verde e azul claro (cartões) e rosa (compacto).
 
 ## Como a equipe usa o painel (`/admin`)
 
 - **Promoções**: toque em **+ Nova promoção** → foto, nome, preço, categoria, **dias** (Seg a Dom ou *semana toda*) → Salvar.
   O interruptor verde mostra ou esconde a oferta no site sem apagar.
-- **Temas**: título, subtítulo, visual (cores, fundo e arte do título) e rodapé de cada dia da semana.
+- **Panfletos**: título, logo 3D, visual, dias, validade (data inicial e final) e rodapé de cada encarte; ao cadastrar um produto, escolha em qual panfleto ele entra.
 - **Sorteios**: **+ Novo sorteio** → arte, prêmio, data/hora (contagem regressiva automática), como participar, regulamento.
   Depois do sorteio, preencha o **ganhador** (nome, foto, vídeo): ele passa sozinho para *Já sorteados*.
 

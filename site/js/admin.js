@@ -2,7 +2,7 @@ import {
   DEMO, SEM_BANCO, DIAS, CATEGORIAS, UNIDADES, brl, esc, emojiDe, paraNumero,
   login, logout, sessaoAtual, ehAdmin, demoRestaurar,
   listarProdutos, salvarProduto, removerProduto, listarSorteios, salvarSorteio, removerSorteio, enviarImagem, statusSorteio,
-  listarTemas, salvarTema, ESTILOS, TEMAS_PADRAO, reduzirImagem, enviarBlob,
+  listarPanfletos, salvarPanfleto, removerPanfleto, ESTILOS, reduzirImagem, enviarBlob,
 } from './api.js';
 import { tirarFundoLiso, tirarFundoIA } from './imagem.js';
 
@@ -10,7 +10,7 @@ const app = document.getElementById('app');
 const $ = (s, c = document) => c.querySelector(s);
 const ic = (id) => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#${id}"/></svg>`;
 
-const S = { aba: 'promos', produtos: [], sorteios: [], temas: {}, filtro: 'todos' };
+const S = { aba: 'promos', produtos: [], sorteios: [], panfletos: [], filtro: 'todos' };
 
 function toast(msg, erro = false) {
   const t = document.createElement('div'); t.className = 'toast' + (erro ? ' toast--err' : ''); t.textContent = msg; t.setAttribute('role', 'status');
@@ -55,7 +55,7 @@ async function iniciar() {
       <div class="ad-tabs" role="tablist">
         <button class="chip-btn" role="tab" data-aba="promos">🏷️ Promoções</button>
         <button class="chip-btn" role="tab" data-aba="sorteios">🎁 Sorteios</button>
-        <button class="chip-btn" role="tab" data-aba="temas">🎨 Temas</button>
+        <button class="chip-btn" role="tab" data-aba="panfletos">📰 Panfletos</button>
       </div>
       <div id="corpo"></div>
     </div>
@@ -64,12 +64,12 @@ async function iniciar() {
   $('#sair').onclick = () => { logout(); telaLogin(); };
   if (DEMO) $('#reset').onclick = async () => { demoRestaurar(); await carregar(); toast('Exemplos restaurados'); };
   app.querySelectorAll('[data-aba]').forEach((b) => b.addEventListener('click', () => { S.aba = b.dataset.aba; desenhar(); }));
-  $('#novo').onclick = () => (S.aba === 'promos' ? editorProduto() : editorSorteio());
+  $('#novo').onclick = () => (S.aba === 'promos' ? editorProduto() : S.aba === 'sorteios' ? editorSorteio() : editorPanfleto());
   await carregar();
 }
 async function carregar() {
   try {
-    [S.produtos, S.sorteios, S.temas] = await Promise.all([listarProdutos({ admin: true }), listarSorteios({ admin: true }), listarTemas()]);
+    [S.produtos, S.sorteios, S.panfletos] = await Promise.all([listarProdutos({ admin: true }), listarSorteios({ admin: true }), listarPanfletos({ admin: true })]);
   } catch (e) {
     if (/expirada|JWT/i.test(e.message)) { logout(); telaLogin('Sua sessão expirou. Entre novamente.'); return; }
     toast('Erro ao carregar: ' + e.message, true);
@@ -78,20 +78,32 @@ async function carregar() {
 }
 function desenhar() {
   app.querySelectorAll('[data-aba]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.aba === S.aba)));
-  $('#novo').hidden = S.aba === 'temas';
-  $('#novo-t').textContent = S.aba === 'promos' ? 'Nova promoção' : 'Novo sorteio';
-  if (S.aba === 'promos') desenharPromos(); else if (S.aba === 'sorteios') desenharSorteios(); else desenharTemas();
+  $('#novo-t').textContent = S.aba === 'promos' ? 'Nova promoção' : S.aba === 'sorteios' ? 'Novo sorteio' : 'Novo panfleto';
+  if (S.aba === 'promos') desenharPromos(); else if (S.aba === 'sorteios') desenharSorteios(); else desenharPanfletos();
 }
 
 /* ============ PROMOÇÕES ============ */
-const rotuloDias = (p) => (p.semana_toda ? '<span class="tag tag--w">Semana toda</span>'
-  : (p.dias || []).length ? DIAS.filter((d) => p.dias.includes(d.n)).map((d) => `<span class="tag">${d.s}</span>`).join('')
-    : '<span class="tag tag--r">Sem dia definido</span>');
-const noFiltro = (p) => S.filtro === 'todos' || (S.filtro === 'semana' ? p.semana_toda : (p.semana_toda || (p.dias || []).includes(Number(S.filtro))));
+const pfDe = (p) => S.panfletos.find((x) => x.id === p.panfleto_id);
+/** Dias em que o produto aparece: os do panfleto (se tiver) ou os dele mesmo. */
+const regraDias = (p) => { const pf = p.panfleto_id ? pfDe(p) : null; return pf ? { semana: pf.semana_toda, dias: pf.dias || [] } : { semana: p.semana_toda, dias: p.dias || [] }; };
+const rotuloDias = (p) => {
+  if (p.panfleto_id) { const pf = pfDe(p); return `<span class="tag tag--w">📰 ${esc(pf ? pf.titulo : 'Panfleto removido')}</span>`; }
+  return p.semana_toda ? '<span class="tag tag--w">Semana toda</span>'
+    : (p.dias || []).length ? DIAS.filter((d) => p.dias.includes(d.n)).map((d) => `<span class="tag">${d.s}</span>`).join('')
+      : '<span class="tag tag--r">Sem dia definido</span>';
+};
+const valeNoFiltro = (p, f) => {
+  if (f === 'todos') return true;
+  if (f.startsWith('pf:')) return p.panfleto_id === f.slice(3);
+  if (f === 'avulso') return !p.panfleto_id;
+  const r = regraDias(p);
+  return f === 'semana' ? r.semana : (r.semana || r.dias.includes(Number(f)));
+};
+const noFiltro = (p) => valeNoFiltro(p, S.filtro);
 
 function desenharPromos() {
-  const contar = (f) => S.produtos.filter((p) => (f === 'todos' ? true : f === 'semana' ? p.semana_toda : (p.semana_toda || (p.dias || []).includes(Number(f))))).length;
-  const filtros = [['todos', 'Todos'], ...DIAS.map((d) => [String(d.n), d.s]), ['semana', 'Semana toda']];
+  const contar = (f) => S.produtos.filter((p) => valeNoFiltro(p, f)).length;
+  const filtros = [['todos', 'Todos'], ...DIAS.map((d) => [String(d.n), d.s]), ['semana', 'Semana toda'], ...S.panfletos.map((pf) => ['pf:' + pf.id, '📰 ' + pf.titulo]), ['avulso', 'Avulsos']];
   const lista = S.produtos.filter(noFiltro);
   $('#corpo').innerHTML = `
     <div class="ad-days" role="group" aria-label="Filtrar por dia">${filtros.map(([k, n]) =>
@@ -120,7 +132,8 @@ function desenharPromos() {
 
 function editorProduto(p = null) {
   const novo = !p;
-  const v = p ? { ...p, dias: [...(p.dias || [])] } : { nome: '', descricao: '', categoria: 'Mercearia', preco: '', preco_antigo: '', unidade: 'un', foto_url: '', dias: S.filtro !== 'todos' && S.filtro !== 'semana' ? [Number(S.filtro)] : [], semana_toda: S.filtro === 'semana', valido_ate: '', destaque: false, ativo: true };
+  const filtroDia = /^[0-6]$/.test(S.filtro);
+  const v = p ? { ...p, dias: [...(p.dias || [])] } : { nome: '', descricao: '', categoria: 'Mercearia', preco: '', preco_antigo: '', unidade: 'un', foto_url: '', dias: filtroDia ? [Number(S.filtro)] : [], semana_toda: S.filtro === 'semana', valido_ate: '', destaque: false, ativo: true, panfleto_id: S.filtro.startsWith('pf:') ? S.filtro.slice(3) : null };
   const dlg = $('#ed');
   dlg.innerHTML = `
     <div class="ed__h"><h2>${novo ? 'Nova promoção' : 'Editar promoção'}</h2><button class="ibtn" type="button" data-fechar aria-label="Fechar">×</button></div>
@@ -141,7 +154,10 @@ function editorProduto(p = null) {
         <label class="field"><span>Preço antigo <small>(opcional)</small></span><input name="preco_antigo" inputmode="decimal" placeholder="0,00" value="${v.preco_antigo ? String(v.preco_antigo).replace('.', ',') : ''}"></label>
       </div>
       <div><span class="lbl">Vendido por</span><div class="chips" id="uni" style="margin-top:6px">${UNIDADES.map((u) => `<button type="button" class="chip-btn" data-un="${u}" aria-pressed="${v.unidade === u}">${u}</button>`).join('')}</div></div>
-      <div>
+      <div><span class="lbl">Em qual panfleto?</span>
+        <div class="chips" id="pfs" style="margin-top:6px"><button type="button" class="chip-btn" data-pf="" aria-pressed="${!v.panfleto_id}">Avulso (só pelos dias)</button>${S.panfletos.map((pf) => `<button type="button" class="chip-btn" data-pf="${esc(pf.id)}" aria-pressed="${v.panfleto_id === pf.id}">📰 ${esc(pf.titulo)}</button>`).join('')}</div>
+        <small style="color:var(--muted);display:block;margin-top:4px">Produto de panfleto aparece nos dias e no visual do panfleto escolhido.</small></div>
+      <div id="bloco-dias" ${v.panfleto_id ? 'hidden' : ''}>
         <span class="lbl">Quais dias vale a promoção?</span>
         <div class="chips" id="dias" style="margin-top:6px">${DIAS.map((d) => `<button type="button" class="chip-btn" data-dia="${d.n}" aria-pressed="${v.dias.includes(d.n)}">${d.s}</button>`).join('')}</div>
         <label class="toggle-row" style="margin-top:10px"><span>Vale a semana toda<small>Aparece em todos os dias</small></span><span class="sw"><input type="checkbox" name="semana_toda" ${v.semana_toda ? 'checked' : ''}><i></i></span></label>
@@ -167,6 +183,11 @@ function editorProduto(p = null) {
   });
   chipsUnico('#cats', 'cat', (c) => { v.categoria = c; if (!foto) $('#prev', dlg).textContent = emojiDe(c); });
   chipsUnico('#uni', 'un', (u) => { v.unidade = u; });
+  $('#pfs', dlg).addEventListener('click', (e) => {
+    const b = e.target.closest('[data-pf]'); if (!b) return;
+    dlg.querySelectorAll('#pfs .chip-btn').forEach((x) => x.setAttribute('aria-pressed', 'false')); b.setAttribute('aria-pressed', 'true');
+    v.panfleto_id = b.dataset.pf || null; $('#bloco-dias', dlg).hidden = !!v.panfleto_id;
+  });
   $('#dias', dlg).addEventListener('click', (e) => {
     const b = e.target.closest('[data-dia]'); if (!b) return;
     const n = Number(b.dataset.dia); const i = v.dias.indexOf(n);
@@ -211,10 +232,10 @@ function editorProduto(p = null) {
     if (!d.nome.trim()) return 'Digite o nome do produto.';
     if (!(preco > 0)) return 'Digite um preço válido, como 7,99.';
     if (antigo != null && antigo <= preco) return 'O preço antigo precisa ser maior que o preço atual (ou deixe em branco).';
-    if (!semana && !v.dias.length) return 'Marque pelo menos um dia, ou “Vale a semana toda”.';
+    if (!v.panfleto_id && !semana && !v.dias.length) return 'Marque pelo menos um dia, ou “Vale a semana toda”, ou escolha um panfleto.';
     return {
       ...(p ? { id: p.id } : {}), nome: d.nome.trim(), descricao: d.descricao.trim() || null, categoria: v.categoria, preco, preco_antigo: antigo, unidade: v.unidade,
-      foto_url: foto || null, dias: semana ? [] : [...v.dias].sort(), semana_toda: semana, valido_ate: d.valido_ate || null,
+      foto_url: foto || null, panfleto_id: v.panfleto_id || null, dias: v.panfleto_id || semana ? [] : [...v.dias].sort(), semana_toda: !v.panfleto_id && semana, valido_ate: d.valido_ate || null,
       destaque: f.elements.destaque.checked, ativo: f.elements.ativo.checked,
     };
   };
@@ -329,45 +350,72 @@ function editorSorteio(s = null) {
   };
 }
 
-/* ============ TEMAS DOS PANFLETOS ============ */
-const ORDEM_TEMAS = [1, 2, 3, 4, 5, 6, 0, 7];
-const nomeTema = (d) => (d === 7 ? 'Semana toda' : DIAS.find((x) => x.n === d).l);
-function desenharTemas() {
-  $('#corpo').innerHTML = `<p class="hint" style="margin-bottom:14px">Aqui você escolhe o <b>título, o subtítulo e o visual</b> do panfleto de cada dia (ex.: “Quinta da Carne”).</p>
-    <div class="ad-list">${ORDEM_TEMAS.map((d) => { const t = S.temas[d];
-      return `<div class="row" data-dia="${d}"><div class="row__img">${t.fundo_url ? `<img src="${esc(t.fundo_url)}" alt="">` : '🎨'}</div>
-        <div class="row__t"><b>${esc(t.titulo)}</b><span>${esc(nomeTema(d))}${t.subtitulo ? ' · ' + esc(t.subtitulo) : ''}</span>
-          <div class="tags"><span class="tag">${esc((ESTILOS.find((e) => e.id === t.estilo) || ESTILOS[0]).nome)}</span>${t.fundo_url ? '<span class="tag tag--g">Fundo próprio</span>' : ''}${t.titulo_arte_url ? '<span class="tag tag--g">Arte do título</span>' : ''}</div></div>
-        <div class="row__a"><button class="ibtn" data-edit aria-label="Editar tema de ${esc(nomeTema(d))}">✎</button></div></div>`; }).join('')}</div>`;
-  $('#corpo').querySelectorAll('.row').forEach((r) => { r.querySelector('[data-edit]').onclick = () => editorTema(Number(r.dataset.dia)); });
+/* ============ PANFLETOS ============ */
+const quando = (pf) => {
+  if (pf.semana_toda) return 'Todos os dias';
+  return (pf.dias || []).length ? DIAS.filter((d) => pf.dias.includes(d.n)).map((d) => d.s).join(', ') : 'Sem dia definido';
+};
+function desenharPanfletos() {
+  $('#corpo').innerHTML = `<p class="hint" style="margin-bottom:14px">Cada <b>panfleto</b> é um encarte com título/logo, visual, dias e validade próprios (ex.: “Quinta da Carne”, “Outubro Rosa”). Depois, ao cadastrar um produto, escolha em qual panfleto ele entra.</p>
+    <div class="ad-list">${S.panfletos.length ? S.panfletos.map((pf) => {
+      const n = S.produtos.filter((p) => p.panfleto_id === pf.id).length;
+      const est = ESTILOS.find((e) => e.id === pf.estilo) || ESTILOS[0];
+      return `<div class="row ${pf.ativo ? '' : 'off'}" data-id="${esc(pf.id)}"><div class="row__img">${pf.titulo_arte_url ? `<img src="${esc(pf.titulo_arte_url)}" alt="" style="object-fit:contain">` : '📰'}</div>
+        <div class="row__t"><b>${esc(pf.titulo)}</b><span>${esc(quando(pf))}${pf.valido_de || pf.valido_ate ? ` · ${pf.valido_de ? pf.valido_de.split('-').reverse().join('/') : '…'} a ${pf.valido_ate ? pf.valido_ate.split('-').reverse().join('/') : '…'}` : ''}</span>
+          <div class="tags"><span class="tag">${esc(est.nome)}</span><span class="tag tag--g">${n} produto${n === 1 ? '' : 's'}</span>${pf.ativo ? '' : '<span class="tag tag--r">Oculto</span>'}</div></div>
+        <div class="row__a"><label class="sw" title="Mostrar no site"><input type="checkbox" data-ativo ${pf.ativo ? 'checked' : ''} aria-label="Mostrar ${esc(pf.titulo)} no site"><i></i></label>
+          <button class="ibtn" data-edit aria-label="Editar ${esc(pf.titulo)}">✎</button></div></div>`;
+    }).join('') : '<div class="vazio"><div class="big">📰</div><h3>Nenhum panfleto ainda</h3><p>Toque em “Novo panfleto” para criar o primeiro. Enquanto isso, o site usa os produtos avulsos de cada dia.</p></div>'}</div><div style="height:90px"></div>`;
+  $('#corpo').querySelectorAll('.row').forEach((r) => {
+    const pf = S.panfletos.find((x) => x.id === r.dataset.id);
+    r.querySelector('[data-edit]').onclick = () => editorPanfleto(pf);
+    r.querySelector('[data-ativo]').onchange = async (e) => {
+      pf.ativo = e.target.checked;
+      if (await pedir(() => salvarPanfleto({ id: pf.id, ativo: pf.ativo }))) desenharPanfletos(); else e.target.checked = !pf.ativo;
+    };
+  });
 }
 
-function editorTema(dia) {
-  const v = { ...S.temas[dia] };
+function editorPanfleto(pf = null) {
+  const novo = !pf;
+  const v = pf ? { ...pf, dias: [...(pf.dias || [])] } : { titulo: '', subtitulo: '', estilo: 'azul', cor_a: null, cor_b: null, fundo_url: '', titulo_arte_url: '', rodape: '', dias: [], semana_toda: false, valido_de: '', valido_ate: '', ordem: S.panfletos.length, ativo: true };
+  const HEX = /^#[0-9a-f]{6}$/i;
+  const corA = HEX.test(v.cor_a || '') ? v.cor_a : '#1f5be0', corB = HEX.test(v.cor_b || '') ? v.cor_b : '#041c63';
   const dlg = $('#ed');
-  const corA = /^#[0-9a-f]{6}$/i.test(v.cor_a || '') ? v.cor_a : '#1f5be0', corB = /^#[0-9a-f]{6}$/i.test(v.cor_b || '') ? v.cor_b : '#041c63';
   dlg.innerHTML = `
-    <div class="ed__h"><h2>Tema: ${esc(nomeTema(dia))}</h2><button class="ibtn" type="button" data-fechar aria-label="Fechar">×</button></div>
+    <div class="ed__h"><h2>${novo ? 'Novo panfleto' : 'Editar panfleto'}</h2><button class="ibtn" type="button" data-fechar aria-label="Fechar">×</button></div>
     <form class="ed__b" id="f-t" novalidate>
-      <label class="field"><span>Título do panfleto</span><input name="titulo" value="${esc(v.titulo)}" maxlength="40" placeholder="Ex.: Quinta da Carne" required><small>A última palavra aparece bem grande.</small></label>
-      <label class="field"><span>Subtítulo</span><input name="subtitulo" value="${esc(v.subtitulo || '')}" maxlength="110" placeholder="Ex.: É dia de churrasco! Confira nossas ofertas!"></label>
+      <label class="field"><span>Título</span><input name="titulo" value="${esc(v.titulo)}" maxlength="40" placeholder="Ex.: Quinta da Carne" required><small>Se você enviar a logo 3D abaixo, ela aparece no lugar do texto.</small></label>
+      <label class="field"><span>Subtítulo <small>(opcional)</small></span><input name="subtitulo" value="${esc(v.subtitulo || '')}" maxlength="110" placeholder="Ex.: É dia de churrasco! Confira nossas ofertas!"></label>
+      <div class="foto"><div class="foto__p" id="prev-a">${v.titulo_arte_url ? `<img src="${esc(v.titulo_arte_url)}" alt="" style="object-fit:contain">` : '🔤'}</div>
+        <div><label class="btn btn--outline"><input type="file" accept="image/*" id="arq-a">Logo 3D do panfleto</label>
+        <small style="color:var(--muted);display:block;margin-top:4px">PNG/WebP sem fundo fica melhor.</small>
+        ${v.titulo_arte_url ? '<button type="button" class="btn btn--outline" id="rm-a" style="margin-top:8px;color:#b30f24">Tirar logo</button>' : ''}</div></div>
       <div><span class="lbl">Visual</span><div class="chips" id="estilos" style="margin-top:6px">${ESTILOS.map((e) => `<button type="button" class="chip-btn" data-est="${e.id}" aria-pressed="${v.estilo === e.id}">${e.nome}</button>`).join('')}</div></div>
+      <div>
+        <span class="lbl">Em quais dias aparece?</span>
+        <div class="chips" id="dias" style="margin-top:6px">${DIAS.map((d) => `<button type="button" class="chip-btn" data-dia="${d.n}" aria-pressed="${v.dias.includes(d.n)}">${d.s}</button>`).join('')}</div>
+        <label class="toggle-row" style="margin-top:10px"><span>Todos os dias<small>Campanha: aparece em todos os dias e na aba “Semana toda”</small></span><span class="sw"><input type="checkbox" name="semana_toda" ${v.semana_toda ? 'checked' : ''}><i></i></span></label>
+      </div>
+      <div class="two">
+        <label class="field"><span>Começa em <small>(opcional)</small></span><input name="valido_de" type="date" value="${esc(v.valido_de || '')}"></label>
+        <label class="field"><span>Termina em <small>(opcional)</small></span><input name="valido_ate" type="date" value="${esc(v.valido_ate || '')}"><small>Depois dessa data o panfleto some sozinho.</small></label>
+      </div>
+      <label class="field"><span>Rodapé <small>(opcional)</small></span><textarea name="rodape" placeholder="Ofertas válidas {data}. Sujeitas à disponibilidade de estoque. Imagens ilustrativas.">${esc(v.rodape || '')}</textarea><small>Use <b>{data}</b> onde a validade deve aparecer (vira “somente dia 16/10/2026” ou “de 14 a 17/10/2026”).</small></label>
+      <hr class="sep">
+      <div class="foto"><div class="foto__p" id="prev-f">${v.fundo_url ? `<img src="${esc(v.fundo_url)}" alt="">` : '🖼️'}</div>
+        <div><label class="btn btn--outline"><input type="file" accept="image/*" id="arq-f">Imagem de fundo <small>(opcional)</small></label>
+        ${v.fundo_url ? '<button type="button" class="btn btn--outline" id="rm-f" style="margin-top:8px;color:#b30f24">Tirar fundo próprio</button>' : ''}</div></div>
       <div class="two">
         <label class="field"><span>Cor 1 <small>(opcional)</small></span><input name="cor_a" type="color" value="${corA}" style="padding:4px"></label>
         <label class="field"><span>Cor 2 <small>(opcional)</small></span><input name="cor_b" type="color" value="${corB}" style="padding:4px"></label>
       </div>
       <label class="toggle-row"><span>Usar minhas cores<small>Desligado: usa as cores do visual escolhido</small></span><span class="sw"><input type="checkbox" name="usar_cores" ${v.cor_a || v.cor_b ? 'checked' : ''}><i></i></span></label>
-      <hr class="sep">
-      <div class="foto"><div class="foto__p" id="prev-f">${v.fundo_url ? `<img src="${esc(v.fundo_url)}" alt="">` : '🖼️'}</div>
-        <div><label class="btn btn--outline"><input type="file" accept="image/*" id="arq-f">Imagem de fundo</label>
-        ${v.fundo_url ? '<button type="button" class="btn btn--outline" id="rm-f" style="margin-top:8px;color:#b30f24">Tirar fundo próprio</button>' : ''}</div></div>
-      <div class="foto"><div class="foto__p" id="prev-a">${v.titulo_arte_url ? `<img src="${esc(v.titulo_arte_url)}" alt="">` : '🔤'}</div>
-        <div><label class="btn btn--outline"><input type="file" accept="image/*" id="arq-a">Arte do título (PNG)</label>
-        ${v.titulo_arte_url ? '<button type="button" class="btn btn--outline" id="rm-a" style="margin-top:8px;color:#b30f24">Tirar arte do título</button>' : ''}</div></div>
-      <label class="field"><span>Rodapé</span><textarea name="rodape" placeholder="Ofertas válidas somente dia {data}. Sujeitas à disponibilidade de estoque. Imagens ilustrativas.">${esc(v.rodape || '')}</textarea><small>Use <b>{data}</b> onde a data de validade deve aparecer. Em branco, usa o texto padrão.</small></label>
+      <label class="field"><span>Ordem na página</span><input name="ordem" type="number" inputmode="numeric" value="${Number(v.ordem) || 0}"><small>Menor número aparece primeiro quando há mais de um panfleto no dia.</small></label>
+      <label class="toggle-row"><span>Mostrar no site<small>Desligue para esconder sem apagar</small></span><span class="sw"><input type="checkbox" name="ativo" ${v.ativo ? 'checked' : ''}><i></i></span></label>
       <div class="erro" id="e-t" hidden></div>
     </form>
-    <div class="ed__f"><button class="btn btn--outline" type="button" id="padrao" style="flex:0 0 auto">Restaurar padrão</button><button class="btn btn--whats" type="button" id="salvar">Salvar tema</button></div>`;
+    <div class="ed__f">${novo ? '' : '<button class="btn btn--outline" type="button" id="del" style="flex:0 0 auto;color:#b30f24">Apagar</button>'}<button class="btn btn--whats" type="button" id="salvar">Salvar panfleto</button></div>`;
   dlg.showModal();
   const f = $('#f-t', dlg), erro = $('#e-t', dlg);
   let fundo = v.fundo_url || '', arte = v.titulo_arte_url || '';
@@ -375,10 +423,15 @@ function editorTema(dia) {
     const b = e.target.closest('[data-est]'); if (!b) return;
     dlg.querySelectorAll('#estilos .chip-btn').forEach((x) => x.setAttribute('aria-pressed', 'false')); b.setAttribute('aria-pressed', 'true'); v.estilo = b.dataset.est;
   });
+  $('#dias', dlg).addEventListener('click', (e) => {
+    const b = e.target.closest('[data-dia]'); if (!b) return;
+    const n = Number(b.dataset.dia); const i = v.dias.indexOf(n);
+    i >= 0 ? v.dias.splice(i, 1) : v.dias.push(n); b.setAttribute('aria-pressed', String(i < 0));
+  });
   const subir = (inp, prev, pasta, setar, vazio) => $(inp, dlg).addEventListener('change', async (e) => {
     const file = e.target.files[0]; if (!file) return;
     $(prev, dlg).innerHTML = '<span style="font-size:.8rem;font-weight:700">Enviando…</span>';
-    try { const url = await enviarImagem(file, pasta); setar(url); $(prev, dlg).innerHTML = `<img src="${esc(url)}" alt="">`; }
+    try { const url = await enviarImagem(file, pasta); setar(url); $(prev, dlg).innerHTML = `<img src="${esc(url)}" alt="" style="object-fit:contain">`; }
     catch (err) { $(prev, dlg).textContent = vazio; toast(err.message, true); }
   });
   subir('#arq-f', '#prev-f', 'temas', (u) => { fundo = u; }, '🖼️');
@@ -386,20 +439,24 @@ function editorTema(dia) {
   const rf = $('#rm-f', dlg); if (rf) rf.onclick = () => { fundo = ''; $('#prev-f', dlg).textContent = '🖼️'; };
   const ra = $('#rm-a', dlg); if (ra) ra.onclick = () => { arte = ''; $('#prev-a', dlg).textContent = '🔤'; };
   $('[data-fechar]', dlg).onclick = () => dlg.close();
-  $('#padrao', dlg).onclick = async (e) => {
-    if (!confirm('Voltar este dia para o tema padrão?')) return;
-    e.currentTarget.disabled = true;
-    const p = TEMAS_PADRAO[dia];
-    if (await pedir(() => salvarTema({ dia, titulo: p.titulo, subtitulo: p.subtitulo, estilo: p.estilo, cor_a: null, cor_b: null, fundo_url: null, titulo_arte_url: null, rodape: null }), 'Tema restaurado')) { dlg.close(); carregar(); } else e.currentTarget.disabled = false;
-  };
   $('#salvar', dlg).onclick = async (e) => {
     const d = Object.fromEntries(new FormData(f));
+    const todos = f.elements.semana_toda.checked;
     if (!d.titulo.trim()) { erro.textContent = 'Digite o título do panfleto.'; erro.hidden = false; return; }
+    if (!todos && !v.dias.length) { erro.textContent = 'Marque pelo menos um dia, ou “Todos os dias”.'; erro.hidden = false; return; }
+    if (d.valido_de && d.valido_ate && d.valido_ate < d.valido_de) { erro.textContent = 'A data final não pode ser antes da inicial.'; erro.hidden = false; return; }
     const usar = f.elements.usar_cores.checked;
     e.currentTarget.disabled = true;
-    const ok = await pedir(() => salvarTema({ dia, titulo: d.titulo.trim(), subtitulo: d.subtitulo.trim() || null, estilo: v.estilo || 'azul',
-      cor_a: usar ? d.cor_a : null, cor_b: usar ? d.cor_b : null, fundo_url: fundo || null, titulo_arte_url: arte || null, rodape: d.rodape.trim() || null }), 'Tema salvo!');
-    if (ok) { dlg.close(); carregar(); } else e.currentTarget.disabled = false;
+    const dados = { ...(pf ? { id: pf.id } : {}), titulo: d.titulo.trim(), subtitulo: d.subtitulo.trim() || null, estilo: v.estilo || 'azul',
+      cor_a: usar ? d.cor_a : null, cor_b: usar ? d.cor_b : null, fundo_url: fundo || null, titulo_arte_url: arte || null, rodape: d.rodape.trim() || null,
+      dias: todos ? [] : [...v.dias].sort(), semana_toda: todos, valido_de: d.valido_de || null, valido_ate: d.valido_ate || null, ordem: Number(d.ordem) || 0, ativo: f.elements.ativo.checked };
+    if (await pedir(() => salvarPanfleto(dados), 'Panfleto salvo!')) { dlg.close(); carregar(); } else e.currentTarget.disabled = false;
+  };
+  const del = $('#del', dlg);
+  if (del) del.onclick = async () => {
+    const n = S.produtos.filter((p) => p.panfleto_id === pf.id).length;
+    if (!confirm(`Apagar o panfleto “${pf.titulo}”?${n ? ` Os ${n} produtos dele não serão apagados: ficam avulsos.` : ''}`)) return;
+    if (await pedir(() => removerPanfleto(pf.id), 'Panfleto apagado')) { dlg.close(); carregar(); }
   };
 }
 

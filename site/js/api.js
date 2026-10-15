@@ -26,13 +26,14 @@ export const CATEGORIAS = [
   { nome: 'Padaria', emoji: '🥖' },
   { nome: 'Mercearia', emoji: '🛒' },
   { nome: 'Bebidas', emoji: '🥤' },
+  { nome: 'Peixaria', emoji: '🐟' },
   { nome: 'Frios e laticínios', emoji: '🧀' },
   { nome: 'Limpeza', emoji: '🧼' },
   { nome: 'Higiene', emoji: '🧴' },
   { nome: 'Outros', emoji: '🏷️' },
 ];
 export const UNIDADES = ['un', 'kg', '100g', 'pacote', 'litro', 'bandeja', 'caixa', 'dúzia'];
-export const emojiDe = (cat) => (CATEGORIAS.find((c) => c.nome === cat) || CATEGORIAS[8]).emoji;
+export const emojiDe = (cat) => (CATEGORIAS.find((c) => c.nome === cat) || CATEGORIAS[CATEGORIAS.length - 1]).emoji;
 
 /* ---------- utilidades ---------- */
 const DOW = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
@@ -63,9 +64,12 @@ export function proximaData(diaSemana) {
 
 /** Temas padrão dos panfletos (dia 7 = semana toda). O painel pode sobrescrever qualquer campo. */
 export const ESTILOS = [
-  { id: 'azul', nome: 'Azul Nonatão' }, { id: 'fogo', nome: 'Fogo (carnes)' }, { id: 'verde', nome: 'Verde (hortifruti)' },
-  { id: 'roxo', nome: 'Roxo' }, { id: 'vermelho', nome: 'Vermelho' }, { id: 'sol', nome: 'Sol (amarelo)' },
+  { id: 'azul', nome: 'Azul Nonatão', layout: 'flutuante' }, { id: 'fogo', nome: 'Fogo (carnes)', layout: 'flutuante' },
+  { id: 'roxo', nome: 'Roxo', layout: 'flutuante' }, { id: 'vermelho', nome: 'Vermelho', layout: 'flutuante' }, { id: 'sol', nome: 'Sol (amarelo)', layout: 'flutuante' },
+  { id: 'verde', nome: 'Verde (cartões)', layout: 'cartoes' }, { id: 'pescado', nome: 'Azul claro (cartões)', layout: 'cartoes' },
+  { id: 'rosa', nome: 'Rosa (compacto)', layout: 'compacto' },
 ];
+export const layoutDe = (estilo) => (ESTILOS.find((e) => e.id === estilo) || ESTILOS[0]).layout;
 export const TEMAS_PADRAO = {
   1: { titulo: 'Segunda de Ofertas', subtitulo: 'Comece a semana economizando!', estilo: 'azul' },
   2: { titulo: 'Terça Verde', subtitulo: 'Frutas, legumes e verduras fresquinhas!', estilo: 'verde' },
@@ -76,8 +80,19 @@ export const TEMAS_PADRAO = {
   0: { titulo: 'Domingo em Família', subtitulo: 'Almoço de domingo com preço bom!', estilo: 'sol' },
   7: { titulo: 'Ofertas da Semana', subtitulo: 'Valem todos os dias. Corra e aproveite!', estilo: 'azul' },
 };
-export const RODAPE_PADRAO = 'Ofertas válidas somente dia {data}. Sujeitas à disponibilidade de estoque. Imagens ilustrativas.';
+export const RODAPE_PADRAO = 'Ofertas válidas {data}. Sujeitas à disponibilidade de estoque. Imagens ilustrativas.';
 export const RODAPE_SEMANA = 'Ofertas válidas durante a semana. Sujeitas à disponibilidade de estoque. Imagens ilustrativas.';
+
+const fmtBR = (iso) => iso.split('-').reverse().join('/');
+/** Texto de validade para o rodapé: "somente dia 16/10/2026" ou "de 14 a 17/10/2026". */
+export function textoValidade(p, diaSemana) {
+  if (p.valido_de && p.valido_ate && p.valido_de !== p.valido_ate) {
+    const [a1, m1, d1] = p.valido_de.split('-'); const [a2, m2, d2] = p.valido_ate.split('-');
+    return (m1 === m2 && a1 === a2) ? `de ${d1} a ${d2}/${m2}/${a2}` : `de ${d1}/${m1} a ${d2}/${m2}/${a2}`;
+  }
+  if (p.valido_ate) return `somente dia ${fmtBR(p.valido_ate)}`;
+  return diaSemana == null ? 'durante a semana' : `somente dia ${proximaData(diaSemana)}`;
+}
 
 /* ---------- sessão (login do painel) ---------- */
 const SK = 'nonatao_session';
@@ -141,6 +156,7 @@ function semear() {
       { id: 'd8', nome: 'Detergente líquido', descricao: '500 ml', categoria: 'Limpeza', preco: 2.29, preco_antigo: 2.89, unidade: 'un', foto_url: null, dias: [1], semana_toda: false, destaque: false, ativo: true },
     ],
     temas: {},
+    panfletos: [],
     sorteios: [
       { id: 's1', titulo: 'Sorteio de exemplo', premio: 'Uma cesta de compras', descricao: 'Cadastre os sorteios reais no painel.', imagem_url: null, como_participar: 'Cadastre o passo a passo aqui no painel. Ex.: a cada R$ 100 em compras você ganha um cupom.', regulamento_url: '', data_sorteio: mais(9), ganhador_nome: null, ganhador_foto_url: null, video_url: '', ativo: true },
       { id: 's2', titulo: 'Sorteio anterior (exemplo)', premio: 'Um vale-compras', descricao: '', imagem_url: null, como_participar: '', regulamento_url: '', data_sorteio: mais(-12), ganhador_nome: 'Nome do ganhador', ganhador_foto_url: null, video_url: '', ativo: true },
@@ -164,7 +180,7 @@ export async function listarProdutos({ admin = false } = {}) {
   const hoje = agora().iso;
   return lista.filter((p) => p.ativo && (!p.valido_ate || p.valido_ate >= hoje));
 }
-const camposProduto = ['nome', 'descricao', 'categoria', 'preco', 'preco_antigo', 'unidade', 'foto_url', 'dias', 'semana_toda', 'valido_ate', 'destaque', 'ativo'];
+const camposProduto = ['nome', 'descricao', 'categoria', 'preco', 'preco_antigo', 'unidade', 'foto_url', 'dias', 'semana_toda', 'valido_ate', 'destaque', 'ativo', 'panfleto_id'];
 const limpar = (o, campos) => Object.fromEntries(campos.filter((c) => c in o).map((c) => [c, o[c]]));
 
 export async function salvarProduto(p) {
@@ -210,7 +226,34 @@ export function statusSorteio(s) {
   return 'ativo';
 }
 
-/* ---------- temas dos panfletos ---------- */
+/* ---------- panfletos (encartes) ---------- */
+const camposPanfleto = ['titulo', 'subtitulo', 'estilo', 'cor_a', 'cor_b', 'fundo_url', 'titulo_arte_url', 'rodape', 'dias', 'semana_toda', 'valido_de', 'valido_ate', 'ordem', 'ativo'];
+/** Lista os panfletos. Se a tabela ainda não existe (migração 3 não rodada), devolve [] e o site usa só os produtos avulsos. */
+export async function listarPanfletos({ admin = false } = {}) {
+  try {
+    if (DEMO) return demo().panfletos || [];
+    if (SEM_BANCO) return [];
+    return await rest(`panfletos?select=*&order=ordem.asc,criado_em.asc${admin ? '' : '&ativo=eq.true'}`, { auth: admin });
+  } catch { return []; }
+}
+/** Panfletos que valem hoje (ativo + janela de datas) — para o site público. */
+export const panfletoVigente = (pf, iso = agora().iso) => pf.ativo !== false && (!pf.valido_de || pf.valido_de <= iso) && (!pf.valido_ate || pf.valido_ate >= iso);
+export async function salvarPanfleto(p) {
+  const dados = limpar(p, camposPanfleto);
+  if (DEMO) {
+    const d = demo(); d.panfletos = d.panfletos || []; const i = d.panfletos.findIndex((x) => x.id === p.id);
+    if (i >= 0) d.panfletos[i] = { ...d.panfletos[i], ...dados }; else d.panfletos.push({ id: uid(), ...dados });
+    demoSalvar(d); return;
+  }
+  if (p.id) await rest(`panfletos?id=eq.${p.id}`, { method: 'PATCH', body: dados, auth: true });
+  else await rest('panfletos', { method: 'POST', body: dados, auth: true });
+}
+export async function removerPanfleto(id) {
+  if (DEMO) { const d = demo(); d.panfletos = (d.panfletos || []).filter((x) => x.id !== id); d.produtos.forEach((p) => { if (p.panfleto_id === id) p.panfleto_id = null; }); demoSalvar(d); return; }
+  await rest(`panfletos?id=eq.${id}`, { method: 'DELETE', auth: true });
+}
+
+/* ---------- temas dos panfletos (dias avulsos) ---------- */
 /** Devolve { 0..7: tema } já com os padrões aplicados por baixo do que foi salvo. */
 export async function listarTemas() {
   let salvos = [];
