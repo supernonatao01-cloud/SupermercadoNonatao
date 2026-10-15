@@ -9,7 +9,7 @@ const dataBR = (iso) => new Date(iso).toLocaleString('pt-BR', { timeZone: 'Ameri
 const dataCurta = (iso) => new Date(iso).toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza', day: '2-digit', month: 'long', year: 'numeric' });
 
 const arte = (s) => (s.imagem_url
-  ? `<img src="${esc(s.imagem_url)}" alt="Arte do sorteio: ${esc(s.titulo)}" loading="lazy">`
+  ? `<a href="${esc(s.imagem_url)}" target="_blank" rel="noopener" aria-label="Abrir a arte do sorteio ${esc(s.titulo)} em tamanho real"><img src="${esc(s.imagem_url)}" alt="Arte do sorteio: ${esc(s.titulo)}" loading="lazy"></a>`
   : `<div class="ph" aria-hidden="true">🎁</div>`);
 
 function acoes(s) {

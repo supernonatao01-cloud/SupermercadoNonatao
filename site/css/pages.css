@@ -88,7 +88,7 @@ body.page{background:#eef2ff;color:var(--ink)}
 .sorteios--ativos{grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr))}
 .sorteio{background:#fff;border-radius:30px;overflow:hidden;box-shadow:0 16px 40px rgba(7,51,165,.14);display:flex;flex-direction:column;animation:card-in .6s var(--ease) both;animation-delay:calc(var(--i,0)*80ms)}
 .sorteio__arte{position:relative;background:linear-gradient(150deg,var(--blue-deep),#2a6cf0);min-height:200px;display:grid;place-items:center;overflow:hidden}
-.sorteio__arte img{width:100%;max-height:480px;object-fit:cover}
+.sorteio__arte img{display:block;width:100%;height:auto;object-fit:contain}
 .sorteio__arte .ph{background:none;font-size:5rem;color:#fff;min-height:220px}
 .status{position:absolute;left:14px;top:14px;padding:7px 14px;border-radius:999px;font:800 .78rem/1 var(--font);letter-spacing:.08em;text-transform:uppercase;background:var(--whats);color:#fff;box-shadow:0 6px 14px rgba(0,0,0,.25)}
 .status--apuracao{background:#f2a900;color:#1b2a66}
@@ -119,7 +119,7 @@ details.como p{padding:0 0 16px;white-space:pre-line;color:var(--ink)}
 .ganhador b{font:800 1.3rem/1.1 var(--display);color:var(--blue-deep)}
 .sorteios--enc{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
 .sorteios--enc .sorteio__arte{min-height:150px}
-.sorteios--enc .sorteio__arte img{max-height:220px}
+
 
 /* ---------- teasers da home ---------- */
 .promo-home{background:#fff;padding:clamp(60px,9vw,110px) 0 clamp(50px,7vw,90px);position:relative;overflow:hidden}

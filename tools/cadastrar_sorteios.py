@@ -16,15 +16,16 @@ sid = lambda n: f"00000000-0000-4000-8600-{n:012d}"
 
 
 def subir(arquivo, destino):
-    im = Image.open(arquivo).convert("RGB"); im.thumbnail((1400, 1800))
-    buf = io.BytesIO(); im.save(buf, "WEBP", quality=88, method=6)
+    im = Image.open(arquivo).convert("RGB"); im.thumbnail((1400, 1800))   # a arte inteira, sem cortar
+    buf = io.BytesIO(); im.save(buf, "WEBP", quality=90, method=6)
     req = urllib.request.Request(f"{BASE}/storage/v1/object/imagens/{destino}", method="POST", data=buf.getvalue(),
                                  headers={"apikey": SEC, "Authorization": f"Bearer {SEC}", "Content-Type": "image/webp", "x-upsert": "true", "cache-control": "max-age=3600"})
     urllib.request.urlopen(req, timeout=120)
-    return f"{BASE}/storage/v1/object/public/imagens/{destino}?v=1"
+    return f"{BASE}/storage/v1/object/public/imagens/{destino}?v=2"
 
 
-arte_moto = subir(os.path.join(RAIZ, "design", "exemplo1.PNG"), "sorteios/moto-eletrica-tres-coracoes.webp")
+arte_moto = subir(os.path.join(RAIZ, "design", "sorteio-moto-eletrica.webp"), "sorteios/moto-eletrica-tres-coracoes.webp")
+arte_patinete = subir(os.path.join(RAIZ, "design", "sorteio-patinete-frisco.webp"), "sorteios/patinete-frisco.webp")
 
 SORTEIOS = [
     dict(id=sid(1), titulo="Ação Três Corações", premio="Uma moto elétrica", imagem_url=arte_moto, data_sorteio=None,
@@ -37,9 +38,9 @@ SORTEIOS = [
          data_sorteio="2026-10-30T19:00:00-03:00",   # horário não informado: ajustar no painel
          descricao="Sorteio no Dia Super Legal, 30/10.",
          como_participar="Na compra de 2 unidades de Fini, você ganha 1 cupom."),
-    dict(id=sid(4), titulo="Ação Três Corações", premio="Um patinete", imagem_url=None, data_sorteio=None,
+    dict(id=sid(4), titulo="Ação Três Corações · Frisco", premio="Um patinete elétrico", imagem_url=arte_patinete, data_sorteio=None,
          descricao=None,
-         como_participar="Na compra de 8 unidades de suco Fria o, você ganha 1 cupom."),
+         como_participar="Na compra de 8 unidades de Frisco 18g de qualquer sabor, você ganha 1 cupom e concorre a um patinete elétrico."),
     dict(id=sid(5), titulo="Ação Jucurutu · Supermercado Nonatão", premio="Um tanquinho", imagem_url=None, data_sorteio=None,
          descricao=None,
          como_participar="Na compra de qualquer produto Jucurutu, você ganha 1 cupom."),
