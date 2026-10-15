@@ -240,7 +240,7 @@ export function statusSorteio(s) {
 }
 
 /* ---------- panfletos (encartes) ---------- */
-const camposPanfleto = ['titulo', 'subtitulo', 'estilo', 'cor_a', 'cor_b', 'fundo_url', 'titulo_arte_url', 'rodape', 'dias', 'semana_toda', 'valido_de', 'valido_ate', 'ordem', 'ativo'];
+const camposPanfleto = ['titulo', 'subtitulo', 'estilo', 'cor_a', 'cor_b', 'fundo_url', 'titulo_arte_url', 'rodape', 'dias', 'semana_toda', 'valido_de', 'valido_ate', 'ordem', 'ativo', 'imagens'];
 /** Lista os panfletos. Se a tabela ainda não existe (migração 3 não rodada), devolve [] e o site usa só os produtos avulsos. */
 export async function listarPanfletos({ admin = false } = {}) {
   try {
@@ -294,7 +294,7 @@ export async function ehAdmin() {
 }
 
 /** Reduz a foto (celular tem 5 a 12 MB) para ~1000px em WebP antes de enviar. */
-export function reduzirImagem(file, max = 1000) {
+export function reduzirImagem(file, max = 1000, qualidade = 0.82) {
   return new Promise((resolve, reject) => {
     const img = new Image(); const url = URL.createObjectURL(file);
     img.onload = () => {
@@ -302,7 +302,7 @@ export function reduzirImagem(file, max = 1000) {
       const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
       URL.revokeObjectURL(url);
-      c.toBlob((b) => (b ? resolve(b) : reject(new Error('Não deu para ler a imagem'))), 'image/webp', 0.82);
+      c.toBlob((b) => (b ? resolve(b) : reject(new Error('Não deu para ler a imagem'))), 'image/webp', qualidade);
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Arquivo de imagem inválido')); };
     img.src = url;

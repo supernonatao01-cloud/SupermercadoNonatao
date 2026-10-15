@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Panfleto online · Nonatão Supermercados</title>
-  <meta name="description" content="Confira o panfleto online do Nonatão Supermercados: as ofertas de cada dia da semana, com preços atualizados. Uiraúna-PB.">
+  <title>Panfletos · Nonatão Supermercados</title>
+  <meta name="description" content="Veja os panfletos de ofertas que estão valendo agora no Nonatão Supermercados, em Uiraúna-PB. Navegue pelas páginas e compartilhe no WhatsApp.">
   <meta name="theme-color" content="#0733A5">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
-  <meta property="og:title" content="Panfleto online · Nonatão Supermercados">
-  <meta property="og:description" content="As ofertas de hoje no Nonatão. Veja o panfleto de cada dia da semana.">
+  <meta property="og:title" content="Panfletos · Nonatão Supermercados">
+  <meta property="og:description" content="As ofertas que estão valendo agora no Nonatão.">
   <meta property="og:image" content="assets/og.jpg">
   <link rel="preload" href="assets/fonts/PlusJakartaSans.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/Baloo2.woff2" as="font" type="font/woff2" crossorigin>
@@ -22,49 +22,37 @@
 </head>
 <body class="page">
   <main id="conteudo">
-    <div class="demo-banner" id="demo" hidden>Modo demonstração: estes produtos são só de exemplo e ficam neste navegador.</div>
+    <div class="demo-banner" id="demo" hidden>Modo demonstração: estes panfletos são só de exemplo e ficam neste navegador.</div>
 
     <section class="phero">
       <svg class="phero__ico" viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#i-tag"/></svg>
       <div class="wrap">
-        <p class="eyebrow">Ofertas da semana</p>
-        <h1>Panfleto <em>online</em></h1>
-        <p>Escolha o panfleto e veja as ofertas em promoção no Nonatão. Atualizamos sempre que chegam novidades.</p>
+        <p class="eyebrow">Ofertas no ar</p>
+        <h1>Panfletos <em>online</em></h1>
+        <p>Veja os panfletos que estão valendo agora, folheie as páginas e compartilhe no WhatsApp.</p>
       </div>
     </section>
 
-    <div class="daytabs">
+    <div class="daytabs" id="barra-abas" hidden>
       <div class="wrap">
         <div class="daytabs__row" role="tablist" aria-label="Panfletos" id="tabs"></div>
       </div>
     </div>
 
-    <div class="wrap">
-      <div style="text-align:center"><div class="viewswitch" role="group" aria-label="Modo de visualização">
-        <button type="button" data-vista="panfleto" aria-pressed="true">Panfleto</button>
-        <button type="button" data-vista="lista" aria-pressed="false">Lista de produtos</button>
-      </div></div>
-
-      <!-- visual de encarte -->
-      <section id="vista-panfleto" class="stage-flyer" aria-live="polite">
-        <div id="flyer-host" style="width:100%;display:grid;justify-items:center"></div>
-      </section>
-
-      <!-- lista com busca -->
-      <section id="vista-lista" hidden>
-        <div class="toolbar">
-          <label class="search">
-            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg>
-            <input id="busca" type="search" placeholder="Buscar produto" autocomplete="off" aria-label="Buscar produto">
-          </label>
-          <div class="cats" id="cats" aria-label="Categorias"></div>
-        </div>
-        <div class="resumo"><h2 id="titulo-dia">Ofertas</h2><span id="contador"></span></div>
-        <div class="grid" id="grid" aria-live="polite"></div>
-      </section>
+    <div class="wrap" aria-live="polite">
+      <div id="viewer-host"></div>
     </div>
 
-    <dialog class="detalhe" id="detalhe" aria-label="Detalhes do produto"></dialog>
+    <dialog class="zoom" id="zoom" aria-label="Panfleto em tela cheia">
+      <div class="zoom__bar">
+        <b id="zoom-t">Panfleto</b>
+        <button type="button" id="zoom-prev" aria-label="Página anterior">‹</button>
+        <button type="button" id="zoom-next" aria-label="Próxima página">›</button>
+        <button type="button" id="zoom-mais" aria-label="Ampliar ou reduzir">🔍 Zoom</button>
+        <button type="button" id="zoom-x" aria-label="Fechar">✕</button>
+      </div>
+      <div class="zoom__area" id="zoom-area"><img id="zoom-img" alt=""></div>
+    </dialog>
   </main>
 
   <script type="module" src="js/panfleto.js"></script>

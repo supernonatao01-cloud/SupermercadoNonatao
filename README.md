@@ -36,36 +36,29 @@ Na internet (sem Supabase configurado) as páginas aparecem vazias — nunca com
    **Nunca** use a chave `service_role` aqui.
 6. Faça commit e push: a Vercel publica sozinha. Acesse `/admin` e entre com o e-mail e a senha.
 
-## Panfletos independentes (migração 3)
+## Panfletos (migrações 3 e 4)
 
-Cada **panfleto** é um encarte com logo 3D, visual, dias e validade próprios (ex.: *Quinta da Carne*, *Quarta e Quinta Verde*,
-*Super Sexta do Pescado*, *Outubro Rosa*). Os produtos entram no panfleto escolhido e vários panfletos podem aparecer no mesmo dia.
+Um **panfleto** é uma promoção (ex.: *Quinta da Carne*) com **período em que fica no ar** e **imagens** (páginas) que o cliente folheia.
+O cliente só vê o que está no ar no dia; depois da data final o panfleto some sozinho.
 
-1. Rode `supabase/migracao_panfletos.sql` no SQL Editor (cria a tabela `panfletos` e a coluna `produtos.panfleto_id`).
-2. Para ver os 4 panfletos de exemplo com os produtos recortados de `imgspanfletos/`:
-   ```bash
-   python tools/recortar_panfletos.py   # recorta produtos e logos (precisa de: pip install rembg pillow)
-   python tools/enviar_cortes.py        # envia os recortes para o Storage
-   python tools/dados_panfletos.py      # cadastra os panfletos e produtos (--apagar remove os exemplos)
-   ```
-   Antes da migração o site continua funcionando com os produtos avulsos de cada dia.
-
-Visuais disponíveis: azul, fogo, roxo, vermelho, sol (produtos flutuando com selo redondo), verde e azul claro (cartões) e rosa (compacto).
+1. Rode `supabase/migracao_panfletos.sql` e depois `supabase/migracao_panfletos_imagens.sql` no SQL Editor.
+2. Para ver os panfletos de exemplo (imagens de `imgspanfletos/`): `python tools/dados_panfletos.py` (`--apagar` remove os exemplos).
 
 ## Como a equipe usa o painel (`/admin`)
 
-- **Promoções**: toque em **+ Nova promoção** → foto, nome, preço, categoria, **dias** (Seg a Dom ou *semana toda*) → Salvar.
-  O interruptor verde mostra ou esconde a oferta no site sem apagar.
-- **Panfletos**: título, logo 3D, visual, dias, validade (data inicial e final) e rodapé de cada encarte; ao cadastrar um produto, escolha em qual panfleto ele entra.
+- **Panfletos**: **+ Novo panfleto** → nome da promoção, *a partir do dia* / *até o dia* (ou “Só hoje”), adicione as imagens
+  (várias de uma vez; ← → muda a ordem; a primeira é a capa) → Salvar. O interruptor verde mostra ou esconde sem apagar.
 - **Sorteios**: **+ Novo sorteio** → arte, prêmio, data/hora (contagem regressiva automática), como participar, regulamento.
   Depois do sorteio, preencha o **ganhador** (nome, foto, vídeo): ele passa sozinho para *Já sorteados*.
+- **Usuários do painel**: `python tools/criar_admin.py` (cria o login e autoriza). Criar só em Authentication não basta.
 
 ## Estrutura
 
 ```
 site/            site publicado (index, panfleto, sorteios, admin)
   js/api.js      camada de dados (Supabase via REST; modo demo no localhost)
-supabase/        schema.sql (tabelas, regras de segurança e bucket de fotos)
+supabase/        schema.sql e migrações (tabelas, regras de segurança, bucket de fotos)
+tools/           scripts de apoio (admin, exemplos, verificação)
 serve.py         servidor local de desenvolvimento
 vercel.json      aponta a Vercel para site/
 ```
